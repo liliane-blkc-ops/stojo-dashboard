@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stojo — Sales Dashboard 2025</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f3;
+    --surface: #ffffff;
+    --surface2: #f0efed;
+    --border: rgba(0,0,0,0.1);
+    --text: #1a1a1a;
+    --text2: #6b6b68;
+    --text3: #9a9a97;
+    --blue: #378ADD;
+    --blue-light: #B5D4F4;
+    --green: #1D9E75;
+    --amber: #BA7517;
+    --red: #E24B4A;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141414;
+      --surface: #1e1e1e;
+      --surface2: #272727;
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f0ee;
+      --text2: #9a9a97;
+      --text3: #6b6b68;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .page { max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .header-left p { font-size: 13px; color: var(--text2); }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .badge-blue { background: #E6F1FB; color: #185FA5; border-color: #B5D4F4; }
+
+  /* KPI Grid */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .kpi-sub { font-size: 12px; color: var(--text2); }
+  .kpi-sub.up { color: var(--green); }
+  .kpi-sub.down { color: var(--red); }
+
+  /* Chart row */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 1rem;
+  }
+  .legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Bottom row */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 12px;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    font-weight: 500;
+    padding: 0 0 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th:not(:first-child) { text-align: right; }
+  td {
+    padding: 9px 0;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  td:not(:first-child) { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+  .td-main { font-size: 12px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Bar inline */
+  .bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .bar-bg { width: 60px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; background: var(--blue); }
+
+  /* Pills */
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .pill-green { background: #EAF3DE; color: #3B6D11; }
+  .pill-amber { background: #FAEEDA; color: #854F0B; }
+  .pill-red   { background: #FCEBEB; color: #A32D2D; }
+  .pill-blue  { background: #E6F1FB; color: #185FA5; }
+
+  /* Margin bar */
+  .margin-bar-bg { width: 80px; height: 4px; background: var(--surface2); border-radius: 2px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px; }
+  .margin-bar-fill { height:100%; border-radius:2px; background: var(--green); }
+
+  /* Channel bars */
+  .ch-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12px; }
+  .ch-label { width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); flex-shrink:0; }
+  .ch-bar-bg { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+  .ch-bar-fill { height:100%; border-radius:3px; }
+  .ch-pct { width:36px; text-align:right; color:var(--text2); font-size:11px; flex-shrink:0; }
+
+  /* Footer */
+  .footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 1rem; }
+    .kpi-grid { grid-template-columns: repeat(2,1fr); }
+    .charts-row, .bottom-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Stojo — Sales Dashboard</h1>
+      <p>Shopify only · January – December 2025 · 17,070 rows</p>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-blue">Online Store 84.1%</span>
+      <span class="badge">Faire 12.9%</span>
+      <span class="badge">Last export: Mar 31, 2026</span>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Net revenue</div>
+      <div class="kpi-value">$473.0k</div>
+      <div class="kpi-sub">Gross $563.7k · Returns $21.6k</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Units sold</div>
+      <div class="kpi-value">21,962</div>
+      <div class="kpi-sub">Across all channels & SKUs</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Gross profit</div>
+      <div class="kpi-value">$284.7k</div>
+      <div class="kpi-sub up">↑ 60.2% gross margin</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Return rate</div>
+      <div class="kpi-value">3.8%</div>
+      <div class="kpi-sub">$21.6k of gross sales · healthy</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="charts-row">
+    <!-- Monthly bar chart -->
+    <div class="card">
+      <div class="card-title">Monthly net revenue</div>
+      <div class="card-sub">Jan – Dec 2025 · all channels combined</div>
+      <div style="position:relative;width:100%;height:220px;">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Channel breakdown -->
+    <div class="card">
+      <div class="card-title">Revenue by channel</div>
+      <div class="card-sub">Full year 2025 · % of net revenue</div>
+      <div style="margin-top:1rem;">
+        <div class="ch-row">
+          <div class="ch-label">Online Store</div>
+          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:84.1%;background:#378ADD;"></div></div>
+          <div class="ch-pct">84.1%</div>
+        </div>
+        <div class="ch-row">
+          <div class="ch-label">Faire Wholesale</div>
+          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:12.9%;background:#1D9E75;"></div></div>
+          <div class="ch-pct">12.9%</div>
+        </div>
+        <div class="ch-row">
+          <div class="ch-label">Shop</div>
+          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:1.5%;background:#BA7517;"></div></div>
+          <div class="ch-pct">1.5%</div>
+        </div>
+        <div class="ch-row">
+          <div class="ch-label">Upsell.com</div>
+          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:0.7%;background:#888780;"></div></div>
+          <div class="ch-pct">0.7%</div>
+        </div>
+        <div class="ch-row">
+          <div class="ch-label">Marketplace Connect</div>
+          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:0.5%;background:#B4B2A9;"></div></div>
+          <div class="ch-pct">0.5%</div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;">
+        <div class="card-sub" style="margin-bottom:8px;">Revenue split (donut)</div>
+        <div style="position:relative;width:100%;height:130px;">
+          <canvas id="channelChart"></canvas>
+        </div>
+        <div class="legend" style="margin-top:10px;">
+          <div class="legend-item"><div class="legend-dot" style="background:#378ADD;"></div>Online Store</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#1D9E75;"></div>Faire</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#BA7517;"></div>Shop</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#B4B2A9;"></div>Other</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-row">
+    <!-- Top products -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Top products by net revenue</div>
+        <span class="badge">Full year 2025</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Net rev</th>
+            <th>Units</th>
+            <th>Margin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-main">Nestable Food Storage Set</td>
+            <td>$49,952</td>
+            <td>600</td>
+            <td><span class="pill pill-green">79.1%</span></td>
+          </tr>
+          <tr>
+            <td class="td-main">Cup</td>
+            <td>$47,251</td>
+            <td>4,248</td>
+            <td><span class="pill pill-green">70.1%</span></td>
+          </tr>
+          <tr>
+            <td class="td-main">36 oz Bowl</td>
+            <td>$45,811</td>
+            <td>764</td>
+            <td><span class="pill pill-green">73.2%</span></td>
+          </tr>
+          <tr>
+            <td class="td-main">24 oz Box – Sale</td>
+            <td>$43,632</td>
+            <td>1,817</td>
+            <td><span class="pill pill-amber">35.9%</span></td>
+          </tr>
+          <tr>
+            <td class="td-main">24 oz Box</td>
+            <td>$38,772</td>
+            <td>973</td>
+            <td><span class="pill pill-green">64.3%</span></td>
+          </tr>
+          <tr>
+            <td class="td-main">12-Pack Mixed Food Storage</td>
+            <td>$33,792</td>
+            <td>189</td>
+            <td><span class="pill pill-green">76.2%</span></td>
+          </tr>
+          <tr>
+            <td class="td-main">36 oz Bowl – Sale</td>
+            <td>$29,298</td>
+            <td>1,332</td>
+            <td><span class="pill pill-red">17.1%</span></td>
+          </tr>
+          <tr>
+            <td class="td-main">Food Storage Set</td>
+            <td>$21,260</td>
+            <td>122</td>
+            <td><span class="pill pill-green">78.1%</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Monthly detail -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Monthly breakdown</div>
+        <span class="badge">Net revenue</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Month</th><th>Net rev</th><th>vs avg</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Jan 2025</td><td>$70,330</td><td><span class="pill pill-green">+67%</span></td></tr>
+          <tr><td>Feb 2025</td><td>$43,432</td><td><span class="pill pill-amber">+3%</span></td></tr>
+          <tr><td>Mar 2025</td><td>$66,315</td><td><span class="pill pill-green">+57%</span></td></tr>
+          <tr><td>Apr 2025</td><td>$39,761</td><td><span class="pill pill-red">-6%</span></td></tr>
+          <tr><td>May 2025</td><td>$45,334</td><td><span class="pill pill-green">+7%</span></td></tr>
+          <tr><td>Jun 2025</td><td>$37,799</td><td><span class="pill pill-red">-10%</span></td></tr>
+          <tr><td>Jul 2025</td><td>$54,658</td><td><span class="pill pill-green">+30%</span></td></tr>
+          <tr><td>Aug 2025</td><td>$53,739</td><td><span class="pill pill-green">+27%</span></td></tr>
+          <tr><td>Sep 2025</td><td>$14,204</td><td><span class="pill pill-red">-66%</span></td></tr>
+          <tr><td>Oct 2025</td><td>$10,996</td><td><span class="pill pill-red">-74%</span></td></tr>
+          <tr><td>Nov 2025</td><td>$19,740</td><td><span class="pill pill-red">-53%</span></td></tr>
+          <tr><td>Dec 2025</td><td>$16,690</td><td><span class="pill pill-red">-60%</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);">
+        Monthly avg: $42,083 · Sep–Dec dip may reflect export range — verify in Shopify
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>Stojo · agentikc by blkc · Shopify Sales by Product Variant SKU export</span>
+    <span>Built with Chart.js · Data: Jan–Dec 2025 · 17,070 rows processed</span>
+  </div>
+
+</div>
+
+<script>
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+const tickColor = isDark ? '#6b6b68' : '#9a9a97';
+
+// Monthly revenue bar chart
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [{
+      label: 'Net revenue',
+      data: [70330, 43432, 66315, 39761, 45334, 37799, 54658, 53739, 14204, 10996, 19740, 16690],
+      backgroundColor: function(ctx) {
+        const v = ctx.raw;
+        if (v >= 60000) return '#378ADD';
+        if (v >= 40000) return '#85B7EB';
+        return '#B5D4F4';
+      },
+      borderRadius: 4,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ' $' + ctx.raw.toLocaleString()
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: tickColor, font: { size: 11 } }
+      },
+      y: {
+        grid: { color: gridColor },
+        ticks: {
+          color: tickColor,
+          font: { size: 11 },
+          callback: v => '$' + (v / 1000).toFixed(0) + 'k'
+        }
+      }
+    }
+  }
+});
+
+// Channel donut chart
+new Chart(document.getElementById('channelChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Online Store', 'Faire', 'Shop', 'Other'],
+    datasets: [{
+      data: [84.1, 12.9, 1.5, 1.5],
+      backgroundColor: ['#378ADD', '#1D9E75', '#BA7517', '#B4B2A9'],
+      borderWidth: 0,
+      hoverOffset: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ' ' + ctx.label + ': ' + ctx.raw + '%'
+        }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
