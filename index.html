@@ -3,527 +3,405 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stojo — Sales Dashboard 2025</title>
+<title>Stojo — Sales Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #f5f5f3;
-    --surface: #ffffff;
-    --surface2: #f0efed;
-    --border: rgba(0,0,0,0.1);
-    --text: #1a1a1a;
-    --text2: #6b6b68;
-    --text3: #9a9a97;
-    --blue: #378ADD;
-    --blue-light: #B5D4F4;
-    --green: #1D9E75;
-    --amber: #BA7517;
-    --red: #E24B4A;
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141414;
-      --surface: #1e1e1e;
-      --surface2: #272727;
-      --border: rgba(255,255,255,0.08);
-      --text: #f0f0ee;
-      --text2: #9a9a97;
-      --text3: #6b6b68;
-    }
-  }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 2rem;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  .page { max-width: 1100px; margin: 0 auto; }
-
-  /* Header */
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .header-left h1 {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    margin-bottom: 4px;
-  }
-  .header-left p { font-size: 13px; color: var(--text2); }
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .badge {
-    font-size: 11px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    background: var(--surface2);
-    color: var(--text2);
-    border: 1px solid var(--border);
-    white-space: nowrap;
-  }
-  .badge-blue { background: #E6F1FB; color: #185FA5; border-color: #B5D4F4; }
-
-  /* KPI Grid */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 1.5rem;
-  }
-  .kpi {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-  }
-  .kpi-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--text3);
-    margin-bottom: 8px;
-    font-weight: 500;
-  }
-  .kpi-value {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-    margin-bottom: 6px;
-  }
-  .kpi-sub { font-size: 12px; color: var(--text2); }
-  .kpi-sub.up { color: var(--green); }
-  .kpi-sub.down { color: var(--red); }
-
-  /* Chart row */
-  .charts-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 12px;
-    margin-bottom: 1.5rem;
-  }
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-  }
-  .card-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 3px;
-  }
-  .card-sub {
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 1rem;
-  }
-  .legend {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    color: var(--text2);
-  }
-  .legend-dot {
-    width: 8px; height: 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  /* Bottom row */
-  .bottom-row {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 12px;
-  }
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  /* Table */
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--text3);
-    font-weight: 500;
-    padding: 0 0 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-  th:not(:first-child) { text-align: right; }
-  td {
-    padding: 9px 0;
-    font-size: 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    vertical-align: middle;
-  }
-  td:not(:first-child) { text-align: right; }
-  tr:last-child td { border-bottom: none; }
-  .td-main { font-size: 12px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-  /* Bar inline */
-  .bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
-  .bar-bg { width: 60px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 2px; background: var(--blue); }
-
-  /* Pills */
-  .pill {
-    display: inline-block;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
-  .pill-green { background: #EAF3DE; color: #3B6D11; }
-  .pill-amber { background: #FAEEDA; color: #854F0B; }
-  .pill-red   { background: #FCEBEB; color: #A32D2D; }
-  .pill-blue  { background: #E6F1FB; color: #185FA5; }
-
-  /* Margin bar */
-  .margin-bar-bg { width: 80px; height: 4px; background: var(--surface2); border-radius: 2px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px; }
-  .margin-bar-fill { height:100%; border-radius:2px; background: var(--green); }
-
-  /* Channel bars */
-  .ch-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12px; }
-  .ch-label { width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); flex-shrink:0; }
-  .ch-bar-bg { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
-  .ch-bar-fill { height:100%; border-radius:3px; }
-  .ch-pct { width:36px; text-align:right; color:var(--text2); font-size:11px; flex-shrink:0; }
-
-  /* Footer */
-  .footer {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--text3);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  @media (max-width: 768px) {
-    body { padding: 1rem; }
-    .kpi-grid { grid-template-columns: repeat(2,1fr); }
-    .charts-row, .bottom-row { grid-template-columns: 1fr; }
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f3;--surface:#fff;--surface2:#f0efed;--border:rgba(0,0,0,0.09);
+  --text:#1a1a1a;--text2:#6b6b68;--text3:#9a9a97;
+  --blue:#378ADD;--green:#1D9E75;--amber:#BA7517;--red:#E24B4A;
+  --radius:12px;--radius-sm:8px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#141414;--surface:#1e1e1e;--surface2:#272727;--border:rgba(255,255,255,0.08);
+  --text:#f0f0ee;--text2:#9a9a97;--text3:#6b6b68;}
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem;font-size:14px;line-height:1.5}
+.page{max-width:1100px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem;flex-wrap:wrap;gap:12px}
+.header h1{font-size:22px;font-weight:600;letter-spacing:-0.3px;margin-bottom:3px}
+.header p{font-size:12px;color:var(--text2)}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);white-space:nowrap}
+.badge-blue{background:#E6F1FB;color:#185FA5;border-color:#B5D4F4}
+.badge-green{background:#EAF3DE;color:#3B6D11;border-color:#C0DD97}
+.filter-row{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:11px;color:var(--text3);margin-right:4px}
+.fbtn{font-size:12px;padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:inherit}
+.fbtn:hover{border-color:var(--blue);color:var(--blue)}
+.fbtn.active{background:var(--text);color:var(--surface);border-color:transparent}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:8px;font-weight:500}
+.kpi-value{font-size:24px;font-weight:600;letter-spacing:-0.5px;margin-bottom:5px}
+.kpi-sub{font-size:11px;color:var(--text2)}
+.kpi-sub.up{color:var(--green)}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:1.5rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.card-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.card-sub{font-size:11px;color:var(--text2);margin-bottom:1rem}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.ch-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px}
+.ch-label{width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);flex-shrink:0}
+.ch-bar-bg{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.ch-bar-fill{height:100%;border-radius:3px}
+.ch-pct{width:36px;text-align:right;color:var(--text2);font-size:11px;flex-shrink:0}
+.bottom-row{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:1.5rem}
+.sku-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem}
+.sku-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.sku-tab{font-size:11px;padding:4px 12px;border-radius:16px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all 0.15s}
+.sku-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sku-tab:hover:not(.active){border-color:var(--blue);color:var(--blue)}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:500;padding:0 0 10px;text-align:left;border-bottom:1px solid var(--border)}
+th:not(:first-child){text-align:right}
+td{padding:8px 0;font-size:12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+td:not(:first-child){text-align:right}
+tr:last-child td{border-bottom:none}
+.td-name{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
+.pill-green{background:#EAF3DE;color:#3B6D11}
+.pill-amber{background:#FAEEDA;color:#854F0B}
+.pill-red{background:#FCEBEB;color:#A32D2D}
+.pill-blue{background:#E6F1FB;color:#185FA5}
+.footer{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media(max-width:768px){
+  body{padding:1rem}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row,.bottom-row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 <div class="page">
-
-  <!-- Header -->
   <div class="header">
-    <div class="header-left">
-      <h1>Stojo — Sales Dashboard</h1>
-      <p>Shopify only · January – December 2025 · 17,070 rows</p>
+    <div>
+      <h1>Stojo &mdash; Sales Dashboard</h1>
+      <p id="header-sub">Loading...</p>
     </div>
     <div class="header-right">
-      <span class="badge badge-blue">Online Store 84.1%</span>
-      <span class="badge">Faire 12.9%</span>
-      <span class="badge">Last export: Mar 31, 2026</span>
+      <span class="badge badge-blue">Shopify</span>
+      <span class="badge badge-green">Live data</span>
+      <span class="badge" id="updated-badge">Updated: &mdash;</span>
     </div>
   </div>
-
-  <!-- KPIs -->
+  <div class="filter-row">
+    <span class="filter-label">Period:</span>
+    <button class="fbtn" onclick="setFilter(30,this)">Last 30 days</button>
+    <button class="fbtn" onclick="setFilter(90,this)">Last 90 days</button>
+    <button class="fbtn active" onclick="setFilter(365,this)">Last 12 months</button>
+    <button class="fbtn" onclick="setFilter(0,this)">All time</button>
+  </div>
   <div class="kpi-grid">
     <div class="kpi">
       <div class="kpi-label">Net revenue</div>
-      <div class="kpi-value">$473.0k</div>
-      <div class="kpi-sub">Gross $563.7k · Returns $21.6k</div>
+      <div class="kpi-value" id="kpi-net">&mdash;</div>
+      <div class="kpi-sub" id="kpi-net-sub">&mdash;</div>
     </div>
     <div class="kpi">
       <div class="kpi-label">Units sold</div>
-      <div class="kpi-value">21,962</div>
-      <div class="kpi-sub">Across all channels & SKUs</div>
+      <div class="kpi-value" id="kpi-units">&mdash;</div>
+      <div class="kpi-sub">All channels &amp; SKUs</div>
     </div>
     <div class="kpi">
       <div class="kpi-label">Gross profit</div>
-      <div class="kpi-value">$284.7k</div>
-      <div class="kpi-sub up">↑ 60.2% gross margin</div>
+      <div class="kpi-value" id="kpi-gp">&mdash;</div>
+      <div class="kpi-sub up" id="kpi-gp-sub">&mdash;</div>
     </div>
     <div class="kpi">
       <div class="kpi-label">Return rate</div>
-      <div class="kpi-value">3.8%</div>
-      <div class="kpi-sub">$21.6k of gross sales · healthy</div>
+      <div class="kpi-value" id="kpi-ret">&mdash;</div>
+      <div class="kpi-sub" id="kpi-ret-sub">&mdash;</div>
     </div>
   </div>
-
-  <!-- Charts row -->
   <div class="charts-row">
-    <!-- Monthly bar chart -->
     <div class="card">
-      <div class="card-title">Monthly net revenue</div>
-      <div class="card-sub">Jan – Dec 2025 · all channels combined</div>
-      <div style="position:relative;width:100%;height:220px;">
+      <div class="card-title">Revenue over time</div>
+      <div class="card-sub" id="rev-chart-sub">&mdash;</div>
+      <div style="position:relative;width:100%;height:220px">
         <canvas id="revenueChart"></canvas>
       </div>
     </div>
-
-    <!-- Channel breakdown -->
     <div class="card">
       <div class="card-title">Revenue by channel</div>
-      <div class="card-sub">Full year 2025 · % of net revenue</div>
-      <div style="margin-top:1rem;">
-        <div class="ch-row">
-          <div class="ch-label">Online Store</div>
-          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:84.1%;background:#378ADD;"></div></div>
-          <div class="ch-pct">84.1%</div>
-        </div>
-        <div class="ch-row">
-          <div class="ch-label">Faire Wholesale</div>
-          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:12.9%;background:#1D9E75;"></div></div>
-          <div class="ch-pct">12.9%</div>
-        </div>
-        <div class="ch-row">
-          <div class="ch-label">Shop</div>
-          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:1.5%;background:#BA7517;"></div></div>
-          <div class="ch-pct">1.5%</div>
-        </div>
-        <div class="ch-row">
-          <div class="ch-label">Upsell.com</div>
-          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:0.7%;background:#888780;"></div></div>
-          <div class="ch-pct">0.7%</div>
-        </div>
-        <div class="ch-row">
-          <div class="ch-label">Marketplace Connect</div>
-          <div class="ch-bar-bg"><div class="ch-bar-fill" style="width:0.5%;background:#B4B2A9;"></div></div>
-          <div class="ch-pct">0.5%</div>
-        </div>
-      </div>
-      <div style="margin-top:1.5rem;">
-        <div class="card-sub" style="margin-bottom:8px;">Revenue split (donut)</div>
-        <div style="position:relative;width:100%;height:130px;">
-          <canvas id="channelChart"></canvas>
-        </div>
-        <div class="legend" style="margin-top:10px;">
-          <div class="legend-item"><div class="legend-dot" style="background:#378ADD;"></div>Online Store</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#1D9E75;"></div>Faire</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#BA7517;"></div>Shop</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#B4B2A9;"></div>Other</div>
-        </div>
-      </div>
+      <div class="card-sub">Selected period</div>
+      <div id="ch-bars"></div>
     </div>
   </div>
-
-  <!-- Bottom row -->
+  <div class="sku-section">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Per-SKU monthly trend</div>
+        <div class="card-sub">Click a product to see its monthly revenue trend</div>
+      </div>
+    </div>
+    <div class="sku-tabs" id="sku-tabs"></div>
+    <div style="position:relative;width:100%;height:200px">
+      <canvas id="skuChart"></canvas>
+    </div>
+  </div>
   <div class="bottom-row">
-    <!-- Top products -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Top products by net revenue</div>
-        <span class="badge">Full year 2025</span>
+        <div class="card-title">Top products</div>
+        <span class="badge" id="top-prod-badge">&mdash;</span>
       </div>
       <table>
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Net rev</th>
-            <th>Units</th>
-            <th>Margin</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="td-main">Nestable Food Storage Set</td>
-            <td>$49,952</td>
-            <td>600</td>
-            <td><span class="pill pill-green">79.1%</span></td>
-          </tr>
-          <tr>
-            <td class="td-main">Cup</td>
-            <td>$47,251</td>
-            <td>4,248</td>
-            <td><span class="pill pill-green">70.1%</span></td>
-          </tr>
-          <tr>
-            <td class="td-main">36 oz Bowl</td>
-            <td>$45,811</td>
-            <td>764</td>
-            <td><span class="pill pill-green">73.2%</span></td>
-          </tr>
-          <tr>
-            <td class="td-main">24 oz Box – Sale</td>
-            <td>$43,632</td>
-            <td>1,817</td>
-            <td><span class="pill pill-amber">35.9%</span></td>
-          </tr>
-          <tr>
-            <td class="td-main">24 oz Box</td>
-            <td>$38,772</td>
-            <td>973</td>
-            <td><span class="pill pill-green">64.3%</span></td>
-          </tr>
-          <tr>
-            <td class="td-main">12-Pack Mixed Food Storage</td>
-            <td>$33,792</td>
-            <td>189</td>
-            <td><span class="pill pill-green">76.2%</span></td>
-          </tr>
-          <tr>
-            <td class="td-main">36 oz Bowl – Sale</td>
-            <td>$29,298</td>
-            <td>1,332</td>
-            <td><span class="pill pill-red">17.1%</span></td>
-          </tr>
-          <tr>
-            <td class="td-main">Food Storage Set</td>
-            <td>$21,260</td>
-            <td>122</td>
-            <td><span class="pill pill-green">78.1%</span></td>
-          </tr>
-        </tbody>
+        <thead><tr><th>Product</th><th>Net rev</th><th>Units</th><th>Margin</th></tr></thead>
+        <tbody id="prod-table"></tbody>
       </table>
     </div>
-
-    <!-- Monthly detail -->
     <div class="card">
       <div class="card-header">
         <div class="card-title">Monthly breakdown</div>
         <span class="badge">Net revenue</span>
       </div>
       <table>
-        <thead>
-          <tr><th>Month</th><th>Net rev</th><th>vs avg</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Jan 2025</td><td>$70,330</td><td><span class="pill pill-green">+67%</span></td></tr>
-          <tr><td>Feb 2025</td><td>$43,432</td><td><span class="pill pill-amber">+3%</span></td></tr>
-          <tr><td>Mar 2025</td><td>$66,315</td><td><span class="pill pill-green">+57%</span></td></tr>
-          <tr><td>Apr 2025</td><td>$39,761</td><td><span class="pill pill-red">-6%</span></td></tr>
-          <tr><td>May 2025</td><td>$45,334</td><td><span class="pill pill-green">+7%</span></td></tr>
-          <tr><td>Jun 2025</td><td>$37,799</td><td><span class="pill pill-red">-10%</span></td></tr>
-          <tr><td>Jul 2025</td><td>$54,658</td><td><span class="pill pill-green">+30%</span></td></tr>
-          <tr><td>Aug 2025</td><td>$53,739</td><td><span class="pill pill-green">+27%</span></td></tr>
-          <tr><td>Sep 2025</td><td>$14,204</td><td><span class="pill pill-red">-66%</span></td></tr>
-          <tr><td>Oct 2025</td><td>$10,996</td><td><span class="pill pill-red">-74%</span></td></tr>
-          <tr><td>Nov 2025</td><td>$19,740</td><td><span class="pill pill-red">-53%</span></td></tr>
-          <tr><td>Dec 2025</td><td>$16,690</td><td><span class="pill pill-red">-60%</span></td></tr>
-        </tbody>
+        <thead><tr><th>Month</th><th>Net rev</th><th>vs avg</th></tr></thead>
+        <tbody id="monthly-table"></tbody>
       </table>
-      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);">
-        Monthly avg: $42,083 · Sep–Dec dip may reflect export range — verify in Shopify
-      </div>
     </div>
   </div>
-
-  <!-- Footer -->
   <div class="footer">
-    <span>Stojo · agentikc by blkc · Shopify Sales by Product Variant SKU export</span>
-    <span>Built with Chart.js · Data: Jan–Dec 2025 · 17,070 rows processed</span>
+    <span>Stojo &middot; agentikc by blkc &middot; Shopify export Jan&ndash;Dec 2025</span>
+    <span id="footer-range">&mdash;</span>
   </div>
-
 </div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+const DAILY = {"2025-01-01":{"net":5086.740000000001,"gross":5567.67,"returns":0.0,"units":102,"gp":3560.04,"cogs":1486.7900000000004},"2025-01-02":{"net":2563.8199999999993,"gross":3058.249999999999,"returns":-79.6,"units":100,"gp":1360.75,"cogs":1198.6700000000003},"2025-01-03":{"net":3898.9099999999985,"gross":4689.39,"returns":-343.44,"units":100,"gp":2446.7000000000007,"cogs":1479.3200000000004},"2025-01-04":{"net":3855.31,"gross":4579.17,"returns":-418.0,"units":108,"gp":2517.889999999999,"cogs":1337.4200000000012},"2025-01-05":{"net":4420.299999999998,"gross":4588.499999999999,"returns":0.0,"units":93,"gp":2967.94,"cogs":1452.3600000000013},"2025-01-06":{"net":2958.2,"gross":3725.1399999999994,"returns":-432.96,"units":73,"gp":2016.6499999999994,"cogs":984.2800000000001},"2025-01-07":{"net":3957.4999999999995,"gross":5020.0,"returns":-679.0,"units":62,"gp":3162.36,"cogs":771.1399999999999},"2025-01-08":{"net":1439.87,"gross":2093.99,"returns":-297.0,"units":31,"gp":1188.51,"cogs":251.36},"2025-01-09":{"net":1848.7000000000003,"gross":2424.0400000000004,"returns":-10.19,"units":52,"gp":1201.5399999999993,"cogs":615.7900000000002},"2025-01-10":{"net":1217.4799999999998,"gross":1708.0299999999997,"returns":-192.0,"units":28,"gp":1034.7799999999997,"cogs":347.34000000000003},"2025-01-11":{"net":2319.71,"gross":2482.46,"returns":0.0,"units":36,"gp":1839.7099999999998,"cogs":448.50000000000006},"2025-01-12":{"net":2755.82,"gross":2852.1300000000006,"returns":0.0,"units":40,"gp":2241.0999999999995,"cogs":502.71999999999997},"2025-01-13":{"net":1054.82,"gross":2357.25,"returns":-554.06,"units":54,"gp":818.0200000000002,"cogs":252.16999999999996},"2025-01-14":{"net":1371.5999999999997,"gross":1579.6899999999998,"returns":0.0,"units":21,"gp":1074.5699999999997,"cogs":276.23},"2025-01-15":{"net":385.86,"gross":402.62000000000006,"returns":0.0,"units":10,"gp":312.76,"cogs":73.09999999999998},"2025-01-16":{"net":613.9100000000001,"gross":1195.35,"returns":-463.34,"units":13,"gp":802.84,"cogs":-157.42},"2025-01-17":{"net":1258.4999999999995,"gross":1613.4,"returns":-294.71999999999997,"units":32,"gp":841.3699999999998,"cogs":421.8300000000001},"2025-01-18":{"net":2992.7299999999996,"gross":3093.1099999999997,"returns":0.0,"units":83,"gp":2010.7799999999993,"cogs":969.2000000000004},"2025-01-19":{"net":1482.11,"gross":1616.86,"returns":0.0,"units":47,"gp":924.8200000000002,"cogs":527.69},"2025-01-20":{"net":2587.1699999999996,"gross":3181.31,"returns":-254.58999999999997,"units":62,"gp":1841.9599999999996,"cogs":775.9999999999999},"2025-01-21":{"net":2139.45,"gross":2742.08,"returns":-184.8,"units":136,"gp":1333.52,"cogs":805.9200000000005},"2025-01-22":{"net":6245.37,"gross":7950.509999999999,"returns":0.0,"units":796,"gp":3335.6900000000005,"cogs":2780.68},"2025-01-23":{"net":1302.1399999999999,"gross":1688.64,"returns":-205.3,"units":119,"gp":679.7599999999995,"cogs":548.1800000000003},"2025-01-24":{"net":1847.3,"gross":2220.0,"returns":0.0,"units":63,"gp":1006.83,"cogs":840.4699999999999},"2025-01-25":{"net":1494.6,"gross":1588.73,"returns":0.0,"units":74,"gp":950.4099999999999,"cogs":496.18999999999994},"2025-01-26":{"net":1145.12,"gross":2702.94,"returns":-1200.0800000000002,"units":45,"gp":638.6899999999996,"cogs":506.4300000000003},"2025-01-27":{"net":1889.1299999999999,"gross":1838.94,"returns":107.57,"units":42,"gp":1251.8099999999997,"cogs":517.75},"2025-01-28":{"net":1748.65,"gross":2685.67,"returns":-366.2,"units":140,"gp":922.2699999999999,"cogs":826.3800000000001},"2025-01-29":{"net":2021.71,"gross":2161.31,"returns":0.0,"units":232,"gp":997.38,"cogs":659.3300000000002},"2025-01-30":{"net":993.8600000000002,"gross":1411.96,"returns":-108.17,"units":42,"gp":498.1299999999999,"cogs":480.1500000000001},"2025-01-31":{"net":1433.43,"gross":1678.68,"returns":0.0,"units":65,"gp":997.0099999999995,"cogs":420.42000000000013},"2025-02-01":{"net":1437.08,"gross":1493.58,"returns":0.0,"units":44,"gp":1018.76,"cogs":418.3200000000001},"2025-02-02":{"net":1554.44,"gross":1643.3899999999999,"returns":0.0,"units":32,"gp":1071.7799999999997,"cogs":482.6600000000001},"2025-02-03":{"net":650.1700000000001,"gross":1217.99,"returns":-110.0,"units":42,"gp":289.63999999999976,"cogs":372.5300000000002},"2025-02-04":{"net":866.5699999999998,"gross":1933.9899999999998,"returns":-836.5,"units":40,"gp":618.5299999999997,"cogs":262.04000000000013},"2025-02-05":{"net":2017.25,"gross":2185.0,"returns":-80.45,"units":53,"gp":1426.0299999999997,"cogs":593.29},"2025-02-06":{"net":1916.6,"gross":2345.0,"returns":-82.5,"units":53,"gp":1255.8699999999997,"cogs":660.73},"2025-02-07":{"net":2322.2799999999997,"gross":3154.4799999999996,"returns":-480.03000000000003,"units":85,"gp":1415.1499999999996,"cogs":884.9300000000006},"2025-02-08":{"net":1814.8799999999999,"gross":1872.17,"returns":0.0,"units":33,"gp":1286.3899999999999,"cogs":507.82000000000005},"2025-02-09":{"net":2440.2400000000002,"gross":2650.2,"returns":0.0,"units":57,"gp":1613.9399999999994,"cogs":826.3000000000005},"2025-02-10":{"net":873.62,"gross":1328.42,"returns":-331.0,"units":36,"gp":616.46,"cogs":257.15999999999997},"2025-02-11":{"net":1694.2099999999998,"gross":1901.1799999999998,"returns":-15.67,"units":89,"gp":1108.6999999999998,"cogs":580.5100000000001},"2025-02-12":{"net":651.3400000000001,"gross":718.27,"returns":0.0,"units":23,"gp":455.50000000000006,"cogs":195.83999999999997},"2025-02-13":{"net":2625.12,"gross":2865.6099999999997,"returns":0.0,"units":210,"gp":1538.8600000000001,"cogs":836.2600000000002},"2025-02-14":{"net":789.89,"gross":903.19,"returns":0.0,"units":22,"gp":526.69,"cogs":263.2},"2025-02-15":{"net":1224.26,"gross":1519.4400000000003,"returns":-142.0,"units":43,"gp":704.4100000000001,"cogs":515.8499999999999},"2025-02-16":{"net":948.8199999999999,"gross":1616.58,"returns":-540.59,"units":69,"gp":108.57000000000002,"cogs":784.2500000000005},"2025-02-17":{"net":1584.4,"gross":2420.1600000000003,"returns":-625.72,"units":44,"gp":1144.25,"cogs":440.1500000000001},"2025-02-18":{"net":2361.3,"gross":2903.39,"returns":-77.22,"units":64,"gp":1528.6699999999996,"cogs":808.6300000000002},"2025-02-19":{"net":2327.98,"gross":3270.7000000000003,"returns":-599.9,"units":57,"gp":1380.2299999999998,"cogs":920.7500000000007},"2025-02-20":{"net":836.97,"gross":1120.04,"returns":-177.0,"units":32,"gp":513.25,"cogs":323.72},"2025-02-21":{"net":2378.9700000000003,"gross":2841.73,"returns":-21.25,"units":167,"gp":1322.559999999999,"cogs":1041.4100000000005},"2025-02-22":{"net":1210.1399999999999,"gross":1485.5,"returns":0.0,"units":49,"gp":765.4499999999998,"cogs":444.6900000000001},"2025-02-23":{"net":2840.7299999999996,"gross":3145.4,"returns":0.0,"units":63,"gp":2007.479999999999,"cogs":823.6500000000005},"2025-02-24":{"net":1690.31,"gross":2170.34,"returns":0.0,"units":50,"gp":1133.3899999999999,"cogs":546.73},"2025-02-25":{"net":199.48999999999998,"gross":969.3100000000001,"returns":-660.8,"units":38,"gp":38.07000000000008,"cogs":160.16},"2025-02-26":{"net":1166.34,"gross":1723.19,"returns":-452.0,"units":36,"gp":829.53,"cogs":315.80999999999995},"2025-02-27":{"net":1209.7800000000002,"gross":1857.8799999999997,"returns":-295.0,"units":81,"gp":234.48000000000002,"cogs":975.3000000000003},"2025-02-28":{"net":1798.32,"gross":1840.4300000000003,"returns":0.0,"units":62,"gp":1298.8499999999995,"cogs":499.47000000000014},"2025-03-01":{"net":982.0500000000001,"gross":1080.7000000000003,"returns":0.0,"units":57,"gp":562.7699999999999,"cogs":361.12000000000006},"2025-03-02":{"net":3524.87,"gross":3805.17,"returns":0.0,"units":70,"gp":2533.629999999999,"cogs":976.2400000000002},"2025-03-03":{"net":1645.87,"gross":1760.7099999999998,"returns":-16.0,"units":59,"gp":1078.9199999999998,"cogs":515.9500000000002},"2025-03-04":{"net":2090.3299999999995,"gross":2222.54,"returns":-10.19,"units":107,"gp":1412.3699999999994,"cogs":673.1500000000002},"2025-03-05":{"net":2120.37,"gross":2739.98,"returns":-444.84000000000003,"units":125,"gp":1297.2099999999994,"cogs":788.4300000000002},"2025-03-06":{"net":2530.25,"gross":2843.94,"returns":0.0,"units":60,"gp":1704.4199999999994,"cogs":805.8300000000002},"2025-03-07":{"net":2134.13,"gross":2317.5,"returns":0.0,"units":88,"gp":1463.6099999999997,"cogs":670.5200000000001},"2025-03-08":{"net":2173.6200000000003,"gross":2413.3199999999997,"returns":0.0,"units":49,"gp":1514.2799999999995,"cogs":659.34},"2025-03-09":{"net":2183.0200000000004,"gross":2370.41,"returns":0.0,"units":65,"gp":1352.689999999999,"cogs":830.3300000000007},"2025-03-10":{"net":3048.52,"gross":3626.35,"returns":-284.5,"units":84,"gp":2057.9299999999994,"cogs":956.0199999999999},"2025-03-11":{"net":2018.01,"gross":2273.4300000000003,"returns":0.0,"units":73,"gp":1254.6499999999999,"cogs":763.3600000000004},"2025-03-12":{"net":2736.4799999999996,"gross":3319.75,"returns":-198.0,"units":212,"gp":1734.3799999999999,"cogs":987.1000000000001},"2025-03-13":{"net":1422.0,"gross":1463.0,"returns":0.0,"units":104,"gp":928.0799999999999,"cogs":493.92},"2025-03-14":{"net":2958.5099999999993,"gross":3313.5899999999997,"returns":0.0,"units":69,"gp":2130.849999999999,"cogs":827.6600000000002},"2025-03-15":{"net":2038.6600000000005,"gross":2342.22,"returns":0.0,"units":61,"gp":1418.2299999999998,"cogs":607.6800000000001},"2025-03-16":{"net":1837.37,"gross":1992.0,"returns":0.0,"units":45,"gp":1304.1399999999996,"cogs":533.23},"2025-03-17":{"net":3477.3500000000004,"gross":3801.1,"returns":-56.0,"units":175,"gp":2417.23,"cogs":1047.3700000000001},"2025-03-18":{"net":3097.4900000000002,"gross":3567.37,"returns":-176.0,"units":99,"gp":2191.8699999999994,"cogs":905.6200000000006},"2025-03-19":{"net":2319.02,"gross":3116.51,"returns":-101.5,"units":100,"gp":1607.6,"cogs":711.4200000000002},"2025-03-20":{"net":2293.78,"gross":2668.4500000000003,"returns":0.0,"units":62,"gp":1582.659999999999,"cogs":711.12},"2025-03-21":{"net":2087.58,"gross":2471.2999999999997,"returns":-44.55,"units":60,"gp":1502.04,"cogs":610.0900000000003},"2025-03-22":{"net":2447.9199999999996,"gross":2709.2699999999995,"returns":0.0,"units":58,"gp":1786.6999999999994,"cogs":661.2199999999999},"2025-03-23":{"net":2454.86,"gross":2702.0,"returns":0.0,"units":56,"gp":1615.0699999999997,"cogs":823.7900000000003},"2025-03-24":{"net":1712.5000000000005,"gross":2264.83,"returns":9.990000000000009,"units":53,"gp":1006.0399999999995,"cogs":573.4700000000003},"2025-03-25":{"net":1383.3900000000003,"gross":1662.86,"returns":-67.5,"units":46,"gp":977.1999999999998,"cogs":406.19000000000005},"2025-03-26":{"net":2098.8099999999995,"gross":2210.1099999999997,"returns":0.0,"units":68,"gp":1418.0299999999993,"cogs":680.7800000000002},"2025-03-27":{"net":1276.0,"gross":1359.37,"returns":0.0,"units":34,"gp":888.48,"cogs":387.5200000000002},"2025-03-28":{"net":1310.6899999999998,"gross":1734.0,"returns":0.0,"units":50,"gp":836.8499999999999,"cogs":473.8400000000001},"2025-03-29":{"net":2009.48,"gross":2223.86,"returns":0.0,"units":55,"gp":1281.5099999999995,"cogs":727.9700000000003},"2025-03-30":{"net":1087.1100000000001,"gross":1168.19,"returns":0.0,"units":34,"gp":685.68,"cogs":401.4300000000001},"2025-03-31":{"net":1815.0799999999997,"gross":2446.169999999999,"returns":-429.03999999999996,"units":63,"gp":1158.1599999999994,"cogs":666.2400000000001},"2025-04-01":{"net":1613.0,"gross":1823.0800000000002,"returns":-37.86,"units":75,"gp":1024.8000000000002,"cogs":588.37},"2025-04-02":{"net":2103.72,"gross":2409.09,"returns":0.0,"units":97,"gp":1397.1599999999994,"cogs":694.5600000000003},"2025-04-03":{"net":2143.91,"gross":2374.42,"returns":0.0,"units":57,"gp":1508.009999999999,"cogs":623.3299999999999},"2025-04-04":{"net":1190.77,"gross":1282.99,"returns":0.0,"units":61,"gp":513.87,"cogs":676.9000000000002},"2025-04-05":{"net":1833.7000000000003,"gross":1944.79,"returns":0.0,"units":45,"gp":1176.58,"cogs":640.12},"2025-04-06":{"net":1101.9199999999998,"gross":1209.3099999999997,"returns":0.0,"units":43,"gp":752.2799999999999,"cogs":349.64000000000016},"2025-04-07":{"net":2213.3399999999997,"gross":2519.21,"returns":0.0,"units":61,"gp":1446.4099999999996,"cogs":746.93},"2025-04-08":{"net":2009.2200000000003,"gross":2305.77,"returns":-40.0,"units":88,"gp":1301.0099999999998,"cogs":694.4000000000002},"2025-04-09":{"net":2217.09,"gross":2469.56,"returns":0.0,"units":48,"gp":1599.31,"cogs":617.78},"2025-04-10":{"net":2511.1,"gross":2751.15,"returns":0.0,"units":42,"gp":1824.2399999999993,"cogs":671.8599999999998},"2025-04-11":{"net":3974.4399999999996,"gross":4431.21,"returns":0.0,"units":252,"gp":2379.0599999999995,"cogs":1518.3800000000012},"2025-04-12":{"net":2172.0899999999997,"gross":2510.0,"returns":0.0,"units":53,"gp":1569.1399999999996,"cogs":602.95},"2025-04-13":{"net":966.58,"gross":1047.21,"returns":0.0,"units":52,"gp":373.23,"cogs":593.3500000000001},"2025-04-14":{"net":4070.8300000000004,"gross":4762.18,"returns":-296.06000000000006,"units":595,"gp":2516.8400000000006,"cogs":1539.3700000000001},"2025-04-15":{"net":465.65000000000003,"gross":662.0600000000001,"returns":-40.0,"units":38,"gp":226.53999999999994,"cogs":251.11},"2025-04-16":{"net":549.3,"gross":623.34,"returns":0.0,"units":45,"gp":345.63,"cogs":203.67},"2025-04-17":{"net":655.8100000000001,"gross":693.94,"returns":0.0,"units":47,"gp":380.3,"cogs":275.50999999999993},"2025-04-18":{"net":195.29999999999998,"gross":207.75,"returns":0.0,"units":7,"gp":106.85,"cogs":88.45},"2025-04-19":{"net":533.12,"gross":620.0,"returns":0.0,"units":15,"gp":325.34999999999997,"cogs":207.76999999999995},"2025-04-20":{"net":366.75,"gross":387.5,"returns":0.0,"units":20,"gp":166.84,"cogs":164.91},"2025-04-21":{"net":958.9200000000001,"gross":1206.8999999999999,"returns":-170.0,"units":62,"gp":677.6699999999997,"cogs":281.24999999999994},"2025-04-22":{"net":512.6800000000001,"gross":873.6999999999999,"returns":-242.22,"units":21,"gp":283.33000000000004,"cogs":214.56},"2025-04-23":{"net":388.48999999999995,"gross":527.05,"returns":-39.81,"units":24,"gp":182.76000000000002,"cogs":205.73000000000002},"2025-04-24":{"net":873.5,"gross":890.0,"returns":0.0,"units":25,"gp":615.27,"cogs":258.22999999999996},"2025-04-25":{"net":878.97,"gross":1142.96,"returns":-100.12,"units":66,"gp":574.24,"cogs":334.73},"2025-04-26":{"net":828.5,"gross":918.71,"returns":0.0,"units":28,"gp":487.86,"cogs":340.64},"2025-04-27":{"net":423.28999999999996,"gross":490.05,"returns":0.0,"units":22,"gp":257.77000000000004,"cogs":165.52},"2025-04-28":{"net":694.9499999999999,"gross":1064.25,"returns":-304.71,"units":70,"gp":452.8399999999999,"cogs":256.1100000000001},"2025-04-29":{"net":478.77,"gross":548.5699999999999,"returns":0.0,"units":19,"gp":287.37,"cogs":191.39999999999998},"2025-04-30":{"net":835.7099999999999,"gross":1035.3600000000001,"returns":-90.0,"units":26,"gp":560.1899999999999,"cogs":262.02},"2025-05-01":{"net":891.34,"gross":973.21,"returns":0.0,"units":39,"gp":407.99000000000007,"cogs":461.9700000000001},"2025-05-02":{"net":2884.2899999999995,"gross":3525.2099999999996,"returns":0.0,"units":277,"gp":1492.0199999999993,"cogs":1196.7700000000013},"2025-05-03":{"net":827.25,"gross":1086.73,"returns":0.0,"units":23,"gp":443.2900000000001,"cogs":383.96},"2025-05-04":{"net":437.75,"gross":487.07,"returns":0.0,"units":12,"gp":341.82,"cogs":95.92999999999999},"2025-05-05":{"net":773.04,"gross":862.85,"returns":-25.0,"units":43,"gp":454.62999999999994,"cogs":318.40999999999997},"2025-05-06":{"net":1315.39,"gross":1641.6299999999999,"returns":-178.02999999999997,"units":130,"gp":696.0199999999999,"cogs":559.3699999999999},"2025-05-07":{"net":1364.04,"gross":1619.81,"returns":-31.5,"units":61,"gp":830.6,"cogs":564.9400000000002},"2025-05-08":{"net":1149.4299999999998,"gross":1623.48,"returns":-30.0,"units":71,"gp":327.04,"cogs":822.3900000000001},"2025-05-09":{"net":1491.74,"gross":1668.2199999999998,"returns":-8.0,"units":76,"gp":670.8599999999999,"cogs":828.8800000000002},"2025-05-10":{"net":1773.9900000000005,"gross":1962.7399999999998,"returns":0.0,"units":103,"gp":640.3600000000001,"cogs":1105.1000000000006},"2025-05-11":{"net":601.25,"gross":644.88,"returns":0.0,"units":29,"gp":304.58000000000004,"cogs":296.66999999999996},"2025-05-12":{"net":708.3100000000001,"gross":761.7599999999999,"returns":0.0,"units":40,"gp":410.76999999999987,"cogs":297.54},"2025-05-13":{"net":3327.7500000000005,"gross":3745.9300000000007,"returns":-97.77,"units":196,"gp":1273.3599999999988,"cogs":2054.3900000000017},"2025-05-14":{"net":1020.74,"gross":1151.79,"returns":0.0,"units":88,"gp":-99.43999999999997,"cogs":1098.8700000000006},"2025-05-15":{"net":1042.17,"gross":1102.87,"returns":-12.0,"units":56,"gp":455.2699999999998,"cogs":598.8999999999997},"2025-05-16":{"net":1566.95,"gross":1833.05,"returns":-201.47,"units":116,"gp":490.40000000000015,"cogs":1076.55},"2025-05-17":{"net":743.3699999999999,"gross":1004.0199999999999,"returns":0.0,"units":51,"gp":237.14000000000001,"cogs":506.2299999999999},"2025-05-18":{"net":558.92,"gross":655.25,"returns":-9.35,"units":41,"gp":31.279999999999987,"cogs":536.99},"2025-05-19":{"net":6711.27,"gross":7267.88,"returns":0.0,"units":1046,"gp":507.08,"cogs":1062.6900000000003},"2025-05-20":{"net":1070.94,"gross":1441.3500000000001,"returns":-20.4,"units":119,"gp":233.78000000000006,"cogs":837.1600000000001},"2025-05-21":{"net":625.6999999999999,"gross":738.2399999999999,"returns":-52.7,"units":38,"gp":197.72000000000006,"cogs":427.98},"2025-05-22":{"net":1546.9900000000002,"gross":2028.68,"returns":-84.57000000000001,"units":144,"gp":336.73,"cogs":1210.2599999999998},"2025-05-23":{"net":1040.0200000000002,"gross":1145.1400000000003,"returns":-64.5,"units":43,"gp":689.79,"cogs":350.23},"2025-05-24":{"net":932.8100000000001,"gross":987.8,"returns":0.0,"units":29,"gp":482.96999999999997,"cogs":449.84},"2025-05-25":{"net":1046.55,"gross":1169.71,"returns":0.0,"units":67,"gp":415.80000000000007,"cogs":592.3600000000001},"2025-05-26":{"net":1715.9699999999998,"gross":1955.8300000000002,"returns":0.0,"units":65,"gp":809.6599999999993,"cogs":906.3100000000003},"2025-05-27":{"net":2323.9200000000005,"gross":2687.3099999999995,"returns":0.0,"units":144,"gp":469.0,"cogs":1842.9200000000017},"2025-05-28":{"net":1089.96,"gross":1441.91,"returns":-175.9,"units":71,"gp":247.23999999999995,"cogs":827.7300000000001},"2025-05-29":{"net":1208.92,"gross":1556.3999999999999,"returns":-66.0,"units":64,"gp":489.12000000000006,"cogs":699.8100000000004},"2025-05-30":{"net":1413.06,"gross":1707.7700000000002,"returns":-8.49,"units":119,"gp":64.15000000000006,"cogs":1332.4800000000014},"2025-05-31":{"net":2129.8199999999997,"gross":2343.6699999999996,"returns":0.0,"units":141,"gp":400.1699999999999,"cogs":1699.6600000000008},"2025-06-01":{"net":1478.72,"gross":1595.0200000000002,"returns":0.0,"units":122,"gp":-123.84,"cogs":1571.420000000001},"2025-06-02":{"net":1027.53,"gross":1125.36,"returns":-36.01,"units":86,"gp":113.53000000000006,"cogs":879.0200000000001},"2025-06-03":{"net":3037.96,"gross":3397.7100000000005,"returns":-119.05,"units":299,"gp":821.4900000000001,"cogs":2196.0200000000013},"2025-06-04":{"net":730.35,"gross":808.98,"returns":-55.3,"units":48,"gp":293.80999999999995,"cogs":419.86},"2025-06-05":{"net":3228.6399999999994,"gross":3436.9199999999996,"returns":0.0,"units":250,"gp":1293.0299999999986,"cogs":1920.6200000000017},"2025-06-06":{"net":1088.95,"gross":1216.17,"returns":0.0,"units":62,"gp":260.9899999999999,"cogs":827.9600000000002},"2025-06-07":{"net":366.18,"gross":380.41,"returns":0.0,"units":29,"gp":84.54,"cogs":281.64},"2025-06-08":{"net":696.37,"gross":751.04,"returns":0.0,"units":60,"gp":100.77999999999997,"cogs":560.6099999999999},"2025-06-09":{"net":1045.25,"gross":1282.4,"returns":-220.0,"units":85,"gp":-90.58999999999999,"cogs":1105.8600000000001},"2025-06-10":{"net":1324.0800000000002,"gross":1815.03,"returns":-268.8,"units":78,"gp":238.60000000000005,"cogs":1070.4900000000005},"2025-06-11":{"net":714.6800000000001,"gross":820.36,"returns":-16.11,"units":38,"gp":231.54,"cogs":483.1400000000001},"2025-06-12":{"net":1300.22,"gross":1426.8500000000001,"returns":-10.0,"units":87,"gp":628.0200000000001,"cogs":652.2099999999999},"2025-06-13":{"net":664.5200000000001,"gross":708.3600000000001,"returns":0.0,"units":42,"gp":287.91999999999996,"cogs":356.60999999999996},"2025-06-14":{"net":798.25,"gross":841.48,"returns":0.0,"units":48,"gp":198.81,"cogs":544.4599999999999},"2025-06-15":{"net":1820.34,"gross":2172.84,"returns":-130.0,"units":94,"gp":762.7500000000003,"cogs":1002.62},"2025-06-16":{"net":1397.5500000000006,"gross":1671.1999999999996,"returns":-26.92,"units":99,"gp":381.60999999999996,"cogs":965.9900000000001},"2025-06-17":{"net":1244.9,"gross":1477.45,"returns":-19.07,"units":80,"gp":293.31999999999994,"cogs":861.6300000000002},"2025-06-18":{"net":766.9900000000001,"gross":872.36,"returns":-33.32,"units":55,"gp":67.16000000000003,"cogs":669.8900000000001},"2025-06-19":{"net":1576.93,"gross":1683.66,"returns":-8.0,"units":131,"gp":466.74000000000007,"cogs":1063.2100000000003},"2025-06-20":{"net":1515.2,"gross":1633.8500000000001,"returns":0.0,"units":119,"gp":181.2,"cogs":1245.5400000000006},"2025-06-21":{"net":1699.0600000000002,"gross":1850.8600000000001,"returns":0.0,"units":86,"gp":479.5399999999999,"cogs":1149.5600000000006},"2025-06-22":{"net":882.66,"gross":1007.99,"returns":-42.5,"units":57,"gp":82.29999999999997,"cogs":780.3700000000002},"2025-06-23":{"net":960.38,"gross":1124.3800000000003,"returns":0.0,"units":75,"gp":146.54999999999998,"cogs":748.8700000000001},"2025-06-24":{"net":948.8100000000002,"gross":1089.2,"returns":-18.5,"units":51,"gp":217.29000000000005,"cogs":711.5300000000001},"2025-06-25":{"net":1654.3600000000001,"gross":1919.0000000000002,"returns":0.0,"units":124,"gp":-124.5899999999999,"cogs":1728.980000000001},"2025-06-26":{"net":1013.9100000000001,"gross":1270.96,"returns":-75.0,"units":83,"gp":63.659999999999975,"cogs":935.2600000000003},"2025-06-27":{"net":1314.6399999999999,"gross":1945.43,"returns":0.0,"units":94,"gp":409.50000000000006,"cogs":830.1800000000003},"2025-06-28":{"net":1543.95,"gross":1644.59,"returns":-45.0,"units":57,"gp":871.66,"cogs":617.3199999999999},"2025-06-29":{"net":1189.72,"gross":1274.1,"returns":0.0,"units":86,"gp":202.45000000000002,"cogs":922.3100000000003},"2025-06-30":{"net":767.91,"gross":953.69,"returns":-82.38,"units":59,"gp":236.04999999999998,"cogs":496.8799999999999},"2025-07-01":{"net":1864.67,"gross":1993.62,"returns":-8.0,"units":131,"gp":864.56,"cogs":1000.11},"2025-07-02":{"net":1090.75,"gross":1166.08,"returns":0.0,"units":53,"gp":612.0900000000003,"cogs":418.6999999999998},"2025-07-03":{"net":1305.95,"gross":1556.2999999999997,"returns":-119.37,"units":55,"gp":769.3399999999999,"cogs":617.34},"2025-07-04":{"net":253.07999999999998,"gross":259.92999999999995,"returns":0.0,"units":18,"gp":131.4,"cogs":121.67999999999999},"2025-07-05":{"net":1294.78,"gross":1439.48,"returns":0.0,"units":55,"gp":912.0199999999999,"cogs":382.76000000000005},"2025-07-06":{"net":1092.6200000000001,"gross":1196.5400000000002,"returns":0.0,"units":41,"gp":780.7800000000001,"cogs":291.8499999999999},"2025-07-07":{"net":1024.12,"gross":1396.14,"returns":-74.75999999999999,"units":89,"gp":660.4300000000001,"cogs":328.7099999999999},"2025-07-08":{"net":483.95000000000005,"gross":489.95000000000005,"returns":0.0,"units":31,"gp":295.43000000000006,"cogs":148.54000000000002},"2025-07-09":{"net":1035.56,"gross":1222.59,"returns":-134.42000000000002,"units":59,"gp":784.04,"cogs":185.30999999999995},"2025-07-10":{"net":3232.95,"gross":3342.44,"returns":-25.0,"units":374,"gp":421.14,"cogs":205.36},"2025-07-11":{"net":1717.75,"gross":1862.95,"returns":0.0,"units":68,"gp":1159.7899999999995,"cogs":478.01000000000005},"2025-07-12":{"net":758.9200000000001,"gross":858.3799999999999,"returns":0.0,"units":52,"gp":429.3400000000001,"cogs":210.95},"2025-07-13":{"net":807.2,"gross":890.2,"returns":0.0,"units":39,"gp":554.3800000000001,"cogs":215.34999999999997},"2025-07-14":{"net":3103.14,"gross":3620.66,"returns":-51.0,"units":91,"gp":2289.909999999999,"cogs":757.0199999999999},"2025-07-15":{"net":970.62,"gross":1174.17,"returns":-81.6,"units":39,"gp":757.58,"cogs":213.04},"2025-07-16":{"net":893.6,"gross":1199.26,"returns":-247.54000000000002,"units":73,"gp":475.5600000000001,"cogs":193.07000000000002},"2025-07-17":{"net":955.5800000000003,"gross":1084.04,"returns":0.0,"units":39,"gp":598.89,"cogs":280.49},"2025-07-18":{"net":2046.31,"gross":2209.4699999999993,"returns":0.0,"units":81,"gp":1443.4899999999998,"cogs":587.83},"2025-07-19":{"net":1958.15,"gross":2161.0,"returns":0.0,"units":37,"gp":1433.6799999999996,"cogs":524.4699999999999},"2025-07-20":{"net":2354.85,"gross":2498.7000000000003,"returns":0.0,"units":43,"gp":1747.9799999999993,"cogs":536.9099999999999},"2025-07-21":{"net":3265.1699999999996,"gross":3830.2499999999995,"returns":-192.2,"units":93,"gp":2474.0599999999995,"cogs":816.3200000000003},"2025-07-22":{"net":3636.7099999999996,"gross":4142.37,"returns":-10.0,"units":141,"gp":2274.0999999999995,"cogs":966.6500000000004},"2025-07-23":{"net":3140.15,"gross":3769.7799999999997,"returns":0.0,"units":98,"gp":2145.7799999999997,"cogs":788.14},"2025-07-24":{"net":1714.75,"gross":2193.9,"returns":0.0,"units":58,"gp":1151.6599999999992,"cogs":540.61},"2025-07-25":{"net":1727.0899999999997,"gross":2272.08,"returns":-113.49,"units":50,"gp":1171.2799999999997,"cogs":555.61},"2025-07-26":{"net":3200.1700000000005,"gross":3698.2500000000005,"returns":0.0,"units":70,"gp":2319.689999999999,"cogs":880.4800000000005},"2025-07-27":{"net":1901.7000000000003,"gross":2285.0,"returns":-64.65,"units":39,"gp":1418.7699999999993,"cogs":482.92999999999995},"2025-07-28":{"net":694.32,"gross":894.4300000000001,"returns":-86.0,"units":28,"gp":541.7900000000001,"cogs":152.53},"2025-07-29":{"net":963.4499999999998,"gross":1081.14,"returns":0.0,"units":40,"gp":695.8699999999999,"cogs":267.57999999999987},"2025-07-30":{"net":2402.8799999999997,"gross":3075.34,"returns":-99.2,"units":48,"gp":1778.4299999999994,"cogs":624.4500000000003},"2025-07-31":{"net":3766.7699999999995,"gross":4395.91,"returns":0.0,"units":118,"gp":2444.2800000000007,"cogs":1262.490000000001},"2025-08-01":{"net":1443.8300000000002,"gross":1673.6100000000001,"returns":0.0,"units":42,"gp":987.59,"cogs":456.23999999999995},"2025-08-02":{"net":2936.7599999999998,"gross":3439.33,"returns":0.0,"units":57,"gp":2149.57,"cogs":787.1900000000004},"2025-08-03":{"net":2359.6,"gross":2769.56,"returns":0.0,"units":47,"gp":1728.9199999999994,"cogs":630.6800000000001},"2025-08-04":{"net":466.28,"gross":1151.06,"returns":-590.75,"units":66,"gp":301.7,"cogs":164.57999999999998},"2025-08-05":{"net":1275.65,"gross":1551.4199999999998,"returns":-68.0,"units":42,"gp":979.9699999999998,"cogs":295.68},"2025-08-06":{"net":1294.7499999999998,"gross":1563.0,"returns":0.0,"units":24,"gp":990.56,"cogs":304.18999999999994},"2025-08-07":{"net":3844.5099999999998,"gross":4504.48,"returns":-151.04999999999998,"units":83,"gp":3123.62,"cogs":720.96},"2025-08-08":{"net":1974.0300000000002,"gross":2444.4300000000003,"returns":-10.0,"units":32,"gp":1545.8899999999996,"cogs":438.14000000000004},"2025-08-09":{"net":3608.3500000000004,"gross":4147.549999999999,"returns":0.0,"units":48,"gp":2914.6300000000006,"cogs":693.7200000000001},"2025-08-10":{"net":3022.3100000000004,"gross":3464.39,"returns":0.0,"units":52,"gp":2237.1899999999996,"cogs":785.1200000000002},"2025-08-11":{"net":1906.2000000000003,"gross":2277.0,"returns":0.0,"units":25,"gp":1557.1799999999998,"cogs":349.02000000000004},"2025-08-12":{"net":2609.2200000000003,"gross":3165.2799999999997,"returns":-79.2,"units":45,"gp":1933.78,"cogs":675.4399999999998},"2025-08-13":{"net":2216.2699999999995,"gross":2861.44,"returns":-130.0,"units":77,"gp":1614.3199999999995,"cogs":601.9500000000003},"2025-08-14":{"net":1490.0299999999997,"gross":1645.28,"returns":0.0,"units":39,"gp":1153.3299999999997,"cogs":336.7},"2025-08-15":{"net":1801.73,"gross":2049.51,"returns":0.0,"units":54,"gp":1404.379999999999,"cogs":397.34999999999985},"2025-08-16":{"net":1522.22,"gross":1724.5700000000002,"returns":0.0,"units":29,"gp":1198.62,"cogs":323.6},"2025-08-17":{"net":3880.019999999999,"gross":4585.539999999999,"returns":0.0,"units":80,"gp":2947.5500000000006,"cogs":932.4700000000003},"2025-08-18":{"net":1599.5700000000002,"gross":1971.11,"returns":0.0,"units":62,"gp":1094.6199999999997,"cogs":504.9499999999998},"2025-08-19":{"net":1127.91,"gross":1488.53,"returns":0.0,"units":25,"gp":786.7099999999999,"cogs":341.20000000000016},"2025-08-20":{"net":1595.8999999999999,"gross":1769.7600000000002,"returns":0.0,"units":97,"gp":885.1599999999995,"cogs":356.73999999999984},"2025-08-21":{"net":1009.6800000000001,"gross":1287.0,"returns":0.0,"units":23,"gp":758.9199999999998,"cogs":250.76000000000002},"2025-08-22":{"net":1956.7700000000002,"gross":2147.24,"returns":0.0,"units":31,"gp":1500.3699999999994,"cogs":456.39999999999986},"2025-08-23":{"net":1236.0700000000002,"gross":1454.17,"returns":0.0,"units":18,"gp":939.23,"cogs":296.84000000000003},"2025-08-24":{"net":2268.74,"gross":2687.42,"returns":0.0,"units":31,"gp":1774.77,"cogs":493.96999999999997},"2025-08-25":{"net":1574.74,"gross":1849.68,"returns":0.0,"units":79,"gp":1113.9299999999996,"cogs":460.80999999999995},"2025-08-26":{"net":61.96,"gross":149.95999999999998,"returns":0.0,"units":4,"gp":34.370000000000005,"cogs":27.590000000000003},"2025-08-27":{"net":752.6700000000001,"gross":1250.08,"returns":-258.0,"units":11,"gp":542.22,"cogs":210.45000000000002},"2025-08-28":{"net":460.24,"gross":948.7100000000002,"returns":-274.98,"units":50,"gp":295.98,"cogs":-3.739999999999999},"2025-08-29":{"net":895.39,"gross":1201.92,"returns":0.0,"units":29,"gp":633.8799999999999,"cogs":261.51},"2025-08-30":{"net":1176.3400000000001,"gross":1343.94,"returns":0.0,"units":18,"gp":908.9,"cogs":267.44},"2025-08-31":{"net":371.29999999999995,"gross":451.62,"returns":0.0,"units":14,"gp":259.77,"cogs":111.53},"2025-09-01":{"net":911.1899999999999,"gross":1222.3,"returns":0.0,"units":23,"gp":646.99,"cogs":264.19999999999993},"2025-09-02":{"net":220.0,"gross":235.0,"returns":0.0,"units":5,"gp":160.38,"cogs":59.62},"2025-09-03":{"net":655.4000000000001,"gross":828.62,"returns":-57.0,"units":18,"gp":473.9,"cogs":181.5},"2025-09-04":{"net":512.8499999999999,"gross":859.11,"returns":0.0,"units":22,"gp":334.44,"cogs":178.40999999999997},"2025-09-05":{"net":36.89999999999999,"gross":408.0,"returns":-300.0,"units":3,"gp":29.03000000000001,"cogs":7.870000000000001},"2025-09-06":{"net":1013.56,"gross":1201.96,"returns":0.0,"units":26,"gp":792.3,"cogs":221.26},"2025-09-07":{"net":404.96,"gross":477.17,"returns":0.0,"units":16,"gp":283.56,"cogs":121.4},"2025-09-08":{"net":348.38,"gross":581.1700000000001,"returns":0.0,"units":20,"gp":173.56,"cogs":174.82},"2025-09-09":{"net":69.62999999999998,"gross":331.14,"returns":-183.51000000000002,"units":10,"gp":80.18,"cogs":-10.549999999999999},"2025-09-10":{"net":241.82999999999998,"gross":331.98,"returns":-28.0,"units":11,"gp":160.7,"cogs":81.13000000000001},"2025-09-11":{"net":349.8,"gross":413.28,"returns":0.0,"units":10,"gp":276.89000000000004,"cogs":72.91000000000001},"2025-09-12":{"net":163.76,"gross":316.06,"returns":-87.0,"units":10,"gp":134.3,"cogs":29.46},"2025-09-13":{"net":507.16999999999996,"gross":608.64,"returns":0.0,"units":9,"gp":375.40000000000003,"cogs":131.77},"2025-09-14":{"net":202.26999999999998,"gross":220.34,"returns":0.0,"units":8,"gp":158.63,"cogs":43.64},"2025-09-15":{"net":673.01,"gross":741.27,"returns":-50.0,"units":68,"gp":445.47,"cogs":227.54},"2025-09-16":{"net":1018.36,"gross":1107.0,"returns":0.0,"units":68,"gp":688.0199999999999,"cogs":330.33999999999986},"2025-09-17":{"net":196.26999999999998,"gross":208.6,"returns":0.0,"units":5,"gp":156.06,"cogs":40.21},"2025-09-18":{"net":522.79,"gross":604.66,"returns":0.0,"units":13,"gp":380.5799999999999,"cogs":142.21},"2025-09-19":{"net":170.26,"gross":282.83000000000004,"returns":0.0,"units":10,"gp":113.49000000000001,"cogs":56.77},"2025-09-20":{"net":159.61,"gross":159.61,"returns":0.0,"units":5,"gp":107.08000000000001,"cogs":52.53},"2025-09-21":{"net":434.48999999999995,"gross":444.09,"returns":0.0,"units":13,"gp":326.77000000000004,"cogs":107.71999999999998},"2025-09-22":{"net":763.0,"gross":785.0,"returns":0.0,"units":93,"gp":511.78,"cogs":251.22},"2025-09-23":{"net":438.07000000000005,"gross":466.34,"returns":0.0,"units":35,"gp":301.24999999999994,"cogs":136.82},"2025-09-24":{"net":2779.35,"gross":2876.2099999999996,"returns":-46.63,"units":358,"gp":1813.1000000000001,"cogs":966.25},"2025-09-25":{"net":9.75,"gross":12.19,"returns":0.0,"units":1,"gp":5.37,"cogs":4.38},"2025-09-26":{"net":73.03999999999999,"gross":102.95,"returns":-20.0,"units":5,"gp":43.660000000000004,"cogs":29.380000000000003},"2025-09-27":{"net":584.98,"gross":700.39,"returns":0.0,"units":22,"gp":405.23,"cogs":179.75},"2025-09-28":{"net":199.48,"gross":255.32999999999998,"returns":0.0,"units":11,"gp":141.97000000000003,"cogs":57.510000000000005},"2025-09-29":{"net":283.23,"gross":402.66,"returns":-48.0,"units":11,"gp":208.34000000000003,"cogs":74.88999999999999},"2025-09-30":{"net":260.19000000000005,"gross":600.4000000000001,"returns":-260.27,"units":18,"gp":216.67,"cogs":50.19},"2025-10-01":{"net":373.97,"gross":745.9399999999999,"returns":-168.0,"units":34,"gp":212.14000000000001,"cogs":161.82999999999998},"2025-10-02":{"net":394.85,"gross":422.0,"returns":0.0,"units":12,"gp":329.79,"cogs":65.06},"2025-10-03":{"net":235.82,"gross":318.47,"returns":-25.0,"units":14,"gp":152.78000000000003,"cogs":83.04},"2025-10-04":{"net":392.38,"gross":513.74,"returns":0.0,"units":26,"gp":253.27,"cogs":139.11},"2025-10-05":{"net":300.70000000000005,"gross":353.09999999999997,"returns":0.0,"units":14,"gp":216.89,"cogs":83.81},"2025-10-06":{"net":46.06,"gross":57.58,"returns":0.0,"units":4,"gp":32.93,"cogs":13.13},"2025-10-07":{"net":727.86,"gross":897.34,"returns":0.0,"units":20,"gp":525.33,"cogs":202.53},"2025-10-08":{"net":271.37,"gross":307.46000000000004,"returns":0.0,"units":10,"gp":199.18,"cogs":72.19},"2025-10-09":{"net":100.88,"gross":129.73000000000002,"returns":0.0,"units":10,"gp":66.17,"cogs":34.71},"2025-10-10":{"net":329.61,"gross":372.27,"returns":0.0,"units":13,"gp":240.85,"cogs":88.76},"2025-10-11":{"net":764.76,"gross":886.44,"returns":0.0,"units":18,"gp":591.97,"cogs":172.79},"2025-10-12":{"net":159.25,"gross":190.23,"returns":0.0,"units":7,"gp":113.0,"cogs":46.25000000000001},"2025-10-13":{"net":502.81000000000006,"gross":611.73,"returns":0.0,"units":23,"gp":357.61999999999995,"cogs":145.19},"2025-10-14":{"net":434.92,"gross":518.66,"returns":0.0,"units":25,"gp":270.53000000000003,"cogs":164.39},"2025-10-15":{"net":346.58000000000004,"gross":407.72,"returns":0.0,"units":8,"gp":251.63,"cogs":94.95},"2025-10-16":{"net":48.21,"gross":48.21,"returns":0.0,"units":2,"gp":30.990000000000002,"cogs":17.22},"2025-10-17":{"net":418.77,"gross":494.25,"returns":0.0,"units":9,"gp":306.9,"cogs":111.86999999999999},"2025-10-18":{"net":307.98,"gross":372.97999999999996,"returns":0.0,"units":13,"gp":239.05,"cogs":68.93},"2025-10-19":{"net":111.01,"gross":138.76,"returns":0.0,"units":4,"gp":80.94,"cogs":30.07},"2025-10-20":{"net":554.05,"gross":596.05,"returns":0.0,"units":39,"gp":378.83,"cogs":175.22},"2025-10-21":{"net":65.04,"gross":74.64,"returns":0.0,"units":3,"gp":48.03,"cogs":17.01},"2025-10-22":{"net":352.86,"gross":425.46000000000004,"returns":0.0,"units":9,"gp":251.47000000000003,"cogs":101.39000000000001},"2025-10-23":{"net":485.83,"gross":584.4099999999999,"returns":0.0,"units":16,"gp":390.42999999999995,"cogs":95.4},"2025-10-24":{"net":721.0000000000001,"gross":845.0,"returns":0.0,"units":33,"gp":568.76,"cogs":152.23999999999998},"2025-10-25":{"net":235.2,"gross":270.0,"returns":0.0,"units":5,"gp":177.4,"cogs":57.800000000000004},"2025-10-26":{"net":263.44,"gross":336.57,"returns":0.0,"units":10,"gp":178.13000000000002,"cogs":85.31},"2025-10-27":{"net":72.0,"gross":85.0,"returns":0.0,"units":5,"gp":44.02,"cogs":27.979999999999997},"2025-10-28":{"net":486.74999999999994,"gross":505.69000000000005,"returns":-4.26,"units":10,"gp":382.54,"cogs":104.21000000000001},"2025-10-29":{"net":740.4399999999998,"gross":790.7900000000001,"returns":0.0,"units":36,"gp":529.65,"cogs":210.79000000000005},"2025-10-30":{"net":613.3900000000001,"gross":668.8700000000001,"returns":0.0,"units":39,"gp":421.36,"cogs":192.03},"2025-10-31":{"net":138.63,"gross":168.03,"returns":0.0,"units":3,"gp":104.83,"cogs":33.8},"2025-11-01":{"net":315.54,"gross":388.08000000000004,"returns":0.0,"units":12,"gp":219.52,"cogs":96.01999999999998},"2025-11-02":{"net":550.0,"gross":645.0,"returns":0.0,"units":18,"gp":427.02000000000004,"cogs":122.98},"2025-11-03":{"net":426.46999999999997,"gross":513.56,"returns":-7.59,"units":15,"gp":314.83,"cogs":119.22999999999999},"2025-11-04":{"net":221.85000000000002,"gross":267.0,"returns":0.0,"units":6,"gp":160.13,"cogs":61.720000000000006},"2025-11-05":{"net":418.0799999999999,"gross":482.06,"returns":0.0,"units":11,"gp":314.61999999999995,"cogs":103.45999999999998},"2025-11-06":{"net":153.0,"gross":177.79999999999998,"returns":0.0,"units":9,"gp":77.19,"cogs":75.81},"2025-11-07":{"net":469.39000000000004,"gross":497.65000000000003,"returns":0.0,"units":36,"gp":315.88000000000005,"cogs":153.51000000000002},"2025-11-08":{"net":1023.3499999999998,"gross":1215.6699999999998,"returns":0.0,"units":27,"gp":736.8899999999999,"cogs":286.4599999999999},"2025-11-09":{"net":621.1999999999999,"gross":748.0,"returns":0.0,"units":12,"gp":444.01,"cogs":177.19},"2025-11-10":{"net":333.59,"gross":415.73,"returns":0.0,"units":11,"gp":231.12,"cogs":102.47},"2025-11-11":{"net":434.36999999999995,"gross":493.88,"returns":0.0,"units":20,"gp":301.25,"cogs":133.12},"2025-11-12":{"net":52.0,"gross":62.0,"returns":0.0,"units":3,"gp":32.18,"cogs":19.82},"2025-11-13":{"net":5522.92,"gross":6562.17,"returns":0.0,"units":526,"gp":977.82,"cogs":295.1},"2025-11-14":{"net":49.07,"gross":61.34,"returns":0.0,"units":3,"gp":38.54,"cogs":10.530000000000001},"2025-11-15":{"net":525.77,"gross":608.5699999999999,"returns":-12.64,"units":11,"gp":435.40999999999997,"cogs":90.36},"2025-11-16":{"net":20.4,"gross":25.5,"returns":0.0,"units":1,"gp":16.02,"cogs":4.38},"2025-11-17":{"net":827.32,"gross":1020.66,"returns":-48.0,"units":16,"gp":596.0999999999999,"cogs":231.22000000000003},"2025-11-18":{"net":371.03999999999996,"gross":572.8,"returns":0.0,"units":19,"gp":193.79000000000002,"cogs":177.24999999999997},"2025-11-19":{"net":368.8,"gross":460.2,"returns":0.0,"units":19,"gp":240.68999999999997,"cogs":128.11},"2025-11-20":{"net":657.89,"gross":1031.52,"returns":-36.129999999999995,"units":26,"gp":431.8699999999999,"cogs":241.45},"2025-11-21":{"net":757.0,"gross":866.0,"returns":0.0,"units":47,"gp":488.65,"cogs":268.35},"2025-11-22":{"net":486.15,"gross":578.9300000000001,"returns":0.0,"units":24,"gp":274.15000000000003,"cogs":137.0},"2025-11-23":{"net":100.0,"gross":113.0,"returns":0.0,"units":3,"gp":66.5,"cogs":33.5},"2025-11-24":{"net":182.25000000000003,"gross":229.50000000000003,"returns":-12.700000000000001,"units":10,"gp":115.89999999999999,"cogs":66.42},"2025-11-25":{"net":220.82999999999998,"gross":336.33,"returns":-79.2,"units":10,"gp":124.45,"cogs":96.37999999999997},"2025-11-26":{"net":895.29,"gross":1211.7599999999998,"returns":-103.11,"units":26,"gp":636.9800000000001,"cogs":258.31},"2025-11-27":{"net":503.17,"gross":600.69,"returns":0.0,"units":12,"gp":379.07000000000005,"cogs":124.09999999999998},"2025-11-28":{"net":1801.0000000000002,"gross":2197.38,"returns":-99.0,"units":46,"gp":1366.6399999999994,"cogs":434.35999999999996},"2025-11-29":{"net":382.71,"gross":467.89,"returns":0.0,"units":19,"gp":249.60999999999999,"cogs":133.1},"2025-11-30":{"net":1049.1200000000003,"gross":1263.0400000000002,"returns":0.0,"units":33,"gp":752.85,"cogs":296.27},"2025-12-01":{"net":890.32,"gross":1036.94,"returns":0.0,"units":29,"gp":659.39,"cogs":230.92999999999992},"2025-12-02":{"net":1995.9099999999999,"gross":2208.05,"returns":0.0,"units":131,"gp":1501.94,"cogs":493.96999999999997},"2025-12-03":{"net":344.16,"gross":559.2700000000001,"returns":-76.8,"units":22,"gp":214.17,"cogs":129.99},"2025-12-04":{"net":582.9499999999999,"gross":854.9300000000002,"returns":0.0,"units":37,"gp":406.08,"cogs":176.86999999999998},"2025-12-05":{"net":855.04,"gross":1835.8100000000002,"returns":0.0,"units":38,"gp":498.21999999999997,"cogs":356.81999999999994},"2025-12-06":{"net":392.45,"gross":454.56,"returns":0.0,"units":7,"gp":323.95,"cogs":68.5},"2025-12-07":{"net":646.51,"gross":761.24,"returns":0.0,"units":17,"gp":493.58,"cogs":152.92999999999998},"2025-12-08":{"net":1656.7,"gross":2032.0,"returns":0.0,"units":115,"gp":1054.09,"cogs":602.61},"2025-12-09":{"net":1051.27,"gross":1175.3400000000001,"returns":0.0,"units":28,"gp":819.7099999999999,"cogs":231.55999999999995},"2025-12-10":{"net":238.67,"gross":300.67,"returns":-38.4,"units":7,"gp":218.75000000000003,"cogs":58.32000000000001},"2025-12-11":{"net":346.78000000000003,"gross":405.23,"returns":0.0,"units":14,"gp":259.34000000000003,"cogs":87.44000000000001},"2025-12-12":{"net":796.25,"gross":926.75,"returns":0.0,"units":21,"gp":605.0100000000001,"cogs":191.24},"2025-12-13":{"net":276.71,"gross":302.39,"returns":-10.28,"units":8,"gp":225.86,"cogs":50.85},"2025-12-14":{"net":387.25,"gross":668.1199999999999,"returns":0.0,"units":18,"gp":232.22,"cogs":155.03},"2025-12-15":{"net":1712.7400000000002,"gross":1792.19,"returns":0.0,"units":41,"gp":1472.6299999999999,"cogs":240.10999999999999},"2025-12-16":{"net":394.68,"gross":431.05,"returns":0.0,"units":8,"gp":311.2,"cogs":83.48},"2025-12-17":{"net":156.4,"gross":193.0,"returns":0.0,"units":7,"gp":75.71,"cogs":80.69},"2025-12-18":{"net":499.6,"gross":627.0,"returns":0.0,"units":14,"gp":369.28000000000003,"cogs":130.32000000000002},"2025-12-19":{"net":367.49,"gross":455.61,"returns":0.0,"units":14,"gp":310.59,"cogs":56.900000000000006},"2025-12-20":{"net":187.3,"gross":232.87,"returns":0.0,"units":5,"gp":128.11,"cogs":59.190000000000005},"2025-12-21":{"net":91.75999999999999,"gross":120.97,"returns":0.0,"units":7,"gp":73.45,"cogs":18.310000000000002},"2025-12-22":{"net":71.4,"gross":88.0,"returns":0.0,"units":3,"gp":53.370000000000005,"cogs":18.03},"2025-12-23":{"net":238.78999999999996,"gross":298.48,"returns":0.0,"units":17,"gp":163.14,"cogs":75.65},"2025-12-24":{"net":435.86999999999995,"gross":624.55,"returns":0.0,"units":10,"gp":284.49,"cogs":151.38000000000002},"2025-12-25":{"net":329.90000000000003,"gross":393.63,"returns":0.0,"units":18,"gp":194.75000000000003,"cogs":135.15},"2025-12-26":{"net":597.54,"gross":822.54,"returns":0.0,"units":12,"gp":409.5400000000001,"cogs":188.0},"2025-12-27":{"net":432.71,"gross":519.0,"returns":3.9899999999999984,"units":17,"gp":279.1,"cogs":129.61999999999998},"2025-12-28":{"net":308.40000000000003,"gross":373.0,"returns":0.0,"units":14,"gp":235.66000000000003,"cogs":72.74000000000001},"2025-12-29":{"net":171.1,"gross":201.27999999999997,"returns":0.0,"units":11,"gp":112.50000000000001,"cogs":58.599999999999994},"2025-12-30":{"net":32.0,"gross":40.0,"returns":0.0,"units":2,"gp":24.6,"cogs":7.4},"2025-12-31":{"net":201.2,"gross":274.0,"returns":0.0,"units":7,"gp":144.10000000000002,"cogs":57.10000000000001}};
+const MONTHLY_CHANNEL = {"2025-01":{"Online Store":59803.43,"Faire: Sell Wholesale":9102.05,"Shop":680.55,"Upsell.com ex ReConvert":407.26,"Marketplace Connect":149.94},"2025-02":{"Online Store":38383.86,"Faire: Sell Wholesale":3848.0,"Shop":657.64,"Upsell.com ex ReConvert":522.0,"Maavee":20.0},"2025-03":{"Online Store":59580.64,"Faire: Sell Wholesale":5098.5,"Upsell.com ex ReConvert":749.33,"Shop":534.85,"Modern Dropship":195.0},"2025-04":{"Online Store":30539.97,"Faire: Sell Wholesale":8357.25,"Shop":604.37,"Upsell.com ex ReConvert":171.75,"Goody | Stojo":35.0},"2025-05":{"Online Store":34597.39,"Faire: Sell Wholesale":9556.0,"Shop":693.92,"Upsell.com ex ReConvert":169.13,"Draft Orders":159.5},"2025-06":{"Online Store":30838.97,"Faire: Sell Wholesale":5027.0,"Marketplace Connect":1044.4,"Shop":713.39,"Upsell.com ex ReConvert":114.75},"2025-07":{"Online Store":46594.85,"Faire: Sell Wholesale":5305.5,"Shop":1051.03,"Marketplace Connect":1025.58,"Upsell.com ex ReConvert":457.35},"2025-08":{"Online Store":50113.09,"Faire: Sell Wholesale":2079.0,"Facebook & Instagram":688.0,"Upsell.com ex ReConvert":443.45,"Shop":415.5},"2025-09":{"Online Store":9018.43,"Faire: Sell Wholesale":4725.0,"Shop":418.65,"Upsell.com ex ReConvert":34.5,"Goody | Stojo":7.0},"2025-10":{"Online Store":9500.27,"Faire: Sell Wholesale":1005.0,"Shop":424.65,"Draft Orders":40.0,"Goody | Stojo":17.5},"2025-11":{"Online Store":14433.1,"Faire: Sell Wholesale":4685.0,"Shop":578.74,"Upsell.com ex ReConvert":26.73,"Facebook & Instagram":16.0},"2025-12":{"Online Store":14361.31,"Faire: Sell Wholesale":2040.0,"Shop":120.0,"Upsell.com ex ReConvert":90.74,"TikTok":56.8}};
+const TOP10 = {"Nestable Food Storage Set":{"net":49952.21,"units":600,"gp":39509.29},"Cup":{"net":47251.33,"units":4248,"gp":33144.66},"36 oz Bowl":{"net":45811.43,"units":764,"gp":33554.13},"24 oz Box - Sale":{"net":43631.83,"units":1817,"gp":15669.08},"24 oz Box":{"net":38772.27,"units":973,"gp":24917.63},"12-Pack Mixed Food Storage Set":{"net":33792.42,"units":189,"gp":25747.5},"36 oz Bowl - Sale - Draft":{"net":29298.06,"units":1332,"gp":4996.89},"Food Storage Set - Draft":{"net":21259.57,"units":122,"gp":16608.12},"Food Storage Bowl Set - 5 Pack":{"net":20336.84,"units":235,"gp":15983.14},"Unknown":{"net":18445.96,"units":2559,"gp":1466.92}};
+const PRODUCT_MONTHLY = {"Nestable Food Storage Set":{"2025-01":{"net":13453.71,"units":149},"2025-02":{"net":6421.37,"units":81},"2025-03":{"net":10478.45,"units":129},"2025-04":{"net":2894.87,"units":33},"2025-07":{"net":3994.65,"units":46},"2025-08":{"net":6399.42,"units":80},"2025-09":{"net":1273.07,"units":18},"2025-10":{"net":1522.77,"units":18},"2025-11":{"net":1712.1,"units":22},"2025-12":{"net":1801.8,"units":24}},"Cup":{"2025-01":{"net":7487.52,"units":1022},"2025-02":{"net":2778.39,"units":202},"2025-03":{"net":6555.95,"units":513},"2025-04":{"net":10345.61,"units":1095},"2025-05":{"net":1927.12,"units":108},"2025-06":{"net":1805.46,"units":91},"2025-07":{"net":3312.4,"units":119},"2025-08":{"net":2413.38,"units":215},"2025-09":{"net":4577.9,"units":554},"2025-10":{"net":560.63,"units":50},"2025-11":{"net":930.01,"units":52},"2025-12":{"net":4556.96,"units":227}},"36 oz Bowl":{"2025-01":{"net":1133.78,"units":23},"2025-02":{"net":2106.81,"units":38},"2025-03":{"net":2753.01,"units":53},"2025-04":{"net":1159.26,"units":26},"2025-05":{"net":918.34,"units":27},"2025-06":{"net":1315.77,"units":45},"2025-07":{"net":10823.91,"units":170},"2025-08":{"net":18122.51,"units":228},"2025-09":{"net":1617.88,"units":37},"2025-10":{"net":1465.0,"units":22},"2025-11":{"net":2628.1,"units":56},"2025-12":{"net":1767.06,"units":39}},"24 oz Box - Sale":{"2025-01":{"net":3543.91,"units":106},"2025-02":{"net":4943.31,"units":184},"2025-03":{"net":6318.34,"units":195},"2025-04":{"net":4698.95,"units":177},"2025-05":{"net":7545.94,"units":405},"2025-06":{"net":7209.9,"units":410},"2025-07":{"net":5260.06,"units":210},"2025-08":{"net":2661.53,"units":88},"2025-09":{"net":560.01,"units":14},"2025-10":{"net":184.0,"units":5},"2025-11":{"net":585.88,"units":18},"2025-12":{"net":120.0,"units":5}},"24 oz Box":{"2025-01":{"net":5491.31,"units":180},"2025-02":{"net":3796.48,"units":104},"2025-03":{"net":4602.27,"units":112},"2025-04":{"net":1779.61,"units":52},"2025-05":{"net":1784.15,"units":40},"2025-06":{"net":2139.71,"units":71},"2025-07":{"net":4468.27,"units":113},"2025-08":{"net":6858.42,"units":132},"2025-09":{"net":1635.89,"units":35},"2025-10":{"net":1851.31,"units":35},"2025-11":{"net":2308.49,"units":46},"2025-12":{"net":2056.36,"units":53}},"12-Pack Mixed Food Storage Set":{"2025-01":{"net":2432.09,"units":12},"2025-02":{"net":3333.74,"units":16},"2025-03":{"net":7198.8,"units":39},"2025-04":{"net":1102.5,"units":7},"2025-05":{"net":1935.46,"units":10},"2025-06":{"net":1039.5,"units":7},"2025-07":{"net":4609.5,"units":24},"2025-08":{"net":6888.0,"units":41},"2025-09":{"net":1167.88,"units":7},"2025-10":{"net":719.72,"units":4},"2025-11":{"net":1559.23,"units":9},"2025-12":{"net":1806.0,"units":13}},"36 oz Bowl - Sale - Draft":{"2025-01":{"net":3955.71,"units":82},"2025-02":{"net":2976.47,"units":86},"2025-03":{"net":5001.8,"units":117},"2025-04":{"net":3299.08,"units":86},"2025-05":{"net":8062.2,"units":399},"2025-06":{"net":5955.99,"units":513},"2025-07":{"net":141.73,"units":49},"2025-08":{"net":-74.52,"units":0},"2025-09":{"net":-20.4,"units":0}},"Food Storage Set - Draft":{"2025-01":{"net":8322.07,"units":43},"2025-02":{"net":2112.0,"units":17},"2025-03":{"net":3832.5,"units":22},"2025-04":{"net":2509.5,"units":14},"2025-05":{"net":1323.0,"units":8},"2025-06":{"net":1291.5,"units":7},"2025-07":{"net":1869.0,"units":11}}};
+
+const isDark = matchMedia('(prefers-color-scheme:dark)').matches;
 const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 const tickColor = isDark ? '#6b6b68' : '#9a9a97';
 
-// Monthly revenue bar chart
-new Chart(document.getElementById('revenueChart'), {
-  type: 'bar',
-  data: {
-    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-    datasets: [{
-      label: 'Net revenue',
-      data: [70330, 43432, 66315, 39761, 45334, 37799, 54658, 53739, 14204, 10996, 19740, 16690],
-      backgroundColor: function(ctx) {
-        const v = ctx.raw;
-        if (v >= 60000) return '#378ADD';
-        if (v >= 40000) return '#85B7EB';
-        return '#B5D4F4';
-      },
-      borderRadius: 4,
-      borderSkipped: false
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => ' $' + ctx.raw.toLocaleString()
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: tickColor, font: { size: 11 } }
-      },
-      y: {
-        grid: { color: gridColor },
-        ticks: {
-          color: tickColor,
-          font: { size: 11 },
-          callback: v => '$' + (v / 1000).toFixed(0) + 'k'
-        }
-      }
-    }
-  }
-});
+let revChart, skuChart, activeSkuIndex = 0;
 
-// Channel donut chart
-new Chart(document.getElementById('channelChart'), {
-  type: 'doughnut',
-  data: {
-    labels: ['Online Store', 'Faire', 'Shop', 'Other'],
-    datasets: [{
-      data: [84.1, 12.9, 1.5, 1.5],
-      backgroundColor: ['#378ADD', '#1D9E75', '#BA7517', '#B4B2A9'],
-      borderWidth: 0,
-      hoverOffset: 4
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '65%',
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => ' ' + ctx.label + ': ' + ctx.raw + '%'
+function fmt(n){ return '$' + Math.round(n).toLocaleString(); }
+function fmtK(n){ return n >= 1000 ? '$' + (n/1000).toFixed(1) + 'k' : '$' + Math.round(n); }
+
+function getDateRange(days) {
+  const allDates = Object.keys(DAILY).sort();
+  const last = allDates[allDates.length - 1];
+  if (days === 0) return { start: allDates[0], end: last };
+  const endDate = new Date(last);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - days + 1);
+  return { start: startDate.toISOString().slice(0,10), end: last };
+}
+
+function filterDays(start, end) {
+  return Object.entries(DAILY)
+    .filter(([d]) => d >= start && d <= end)
+    .map(([d,v]) => ({date:d, ...v}));
+}
+
+function groupByMonth(days) {
+  const m = {};
+  days.forEach(d => {
+    const mo = d.date.slice(0,7);
+    if (!m[mo]) m[mo] = {net:0,gross:0,returns:0,units:0,gp:0};
+    ['net','gross','returns','units','gp'].forEach(k => m[mo][k] += d[k]);
+  });
+  return m;
+}
+
+function channelTotals(start, end) {
+  const totals = {};
+  Object.entries(MONTHLY_CHANNEL)
+    .filter(([mo]) => mo >= start.slice(0,7) && mo <= end.slice(0,7))
+    .forEach(([, channels]) => {
+      Object.entries(channels).forEach(([ch, v]) => {
+        totals[ch] = (totals[ch] || 0) + v;
+      });
+    });
+  return totals;
+}
+
+const CH_COLORS = {
+  'Online Store':'#378ADD',
+  'Faire: Sell Wholesale':'#1D9E75',
+  'Shop':'#BA7517',
+  'Upsell.com ex ReConvert':'#888780',
+  'Marketplace Connect':'#B4B2A9'
+};
+
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function moLabel(m) {
+  const [y,mo] = m.split('-');
+  return MONTH_NAMES[parseInt(mo)-1] + ' ' + y.slice(2);
+}
+
+function setFilter(days, btn) {
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render(days);
+}
+
+function render(days) {
+  const { start, end } = getDateRange(days);
+  const filtered = filterDays(start, end);
+
+  const net     = filtered.reduce((s,d) => s+d.net, 0);
+  const gross   = filtered.reduce((s,d) => s+d.gross, 0);
+  const returns = Math.abs(filtered.reduce((s,d) => s+d.returns, 0));
+  const units   = filtered.reduce((s,d) => s+d.units, 0);
+  const gp      = filtered.reduce((s,d) => s+d.gp, 0);
+  const margin  = net ? (gp/net*100).toFixed(1) : 0;
+  const retRate = gross ? (returns/gross*100).toFixed(1) : 0;
+  const label   = days === 0 ? 'All time' : days === 365 ? 'Last 12 months' : 'Last ' + days + ' days';
+
+  document.getElementById('kpi-net').textContent      = fmtK(net);
+  document.getElementById('kpi-net-sub').textContent  = 'Gross ' + fmtK(gross) + ' · Returns ' + fmtK(returns);
+  document.getElementById('kpi-units').textContent    = units.toLocaleString();
+  document.getElementById('kpi-gp').textContent       = fmtK(gp);
+  document.getElementById('kpi-gp-sub').textContent   = margin + '% gross margin';
+  document.getElementById('kpi-ret').textContent      = retRate + '%';
+  document.getElementById('kpi-ret-sub').textContent  = fmt(returns) + ' of gross sales';
+  document.getElementById('header-sub').textContent   = 'Shopify · ' + label + ' · ' + start + ' to ' + end;
+  document.getElementById('updated-badge').textContent = 'Updated: ' + new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('footer-range').textContent = start + ' to ' + end;
+  document.getElementById('top-prod-badge').textContent = label;
+
+  // Revenue chart
+  const byMonth = groupByMonth(filtered);
+  const moLabels = Object.keys(byMonth).sort();
+  const moData   = moLabels.map(m => Math.round(byMonth[m].net));
+  const maxVal   = Math.max(...moData);
+  const revColors = moData.map(v => v >= maxVal*0.8 ? '#378ADD' : v >= maxVal*0.5 ? '#85B7EB' : '#B5D4F4');
+
+  document.getElementById('rev-chart-sub').textContent = 'Monthly net revenue · ' + moLabels.length + ' months';
+
+  if (revChart) {
+    revChart.data.labels = moLabels.map(moLabel);
+    revChart.data.datasets[0].data = moData;
+    revChart.data.datasets[0].backgroundColor = revColors;
+    revChart.update();
+  } else {
+    revChart = new Chart(document.getElementById('revenueChart'), {
+      type: 'bar',
+      data: {
+        labels: moLabels.map(moLabel),
+        datasets: [{ data: moData, backgroundColor: revColors, borderRadius: 4, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{display:false}, tooltip:{callbacks:{label: function(ctx){ return ' ' + fmt(ctx.raw); }}} },
+        scales: {
+          x: { grid:{display:false}, ticks:{color:tickColor, font:{size:11}, maxRotation:45} },
+          y: { grid:{color:gridColor}, ticks:{color:tickColor, font:{size:11}, callback: function(v){ return '$'+(v/1000).toFixed(0)+'k'; }} }
         }
       }
-    }
+    });
   }
-});
+
+  // Channel bars
+  const chTotals = channelTotals(start, end);
+  const chTotal  = Object.values(chTotals).reduce(function(s,v){ return s+(v>0?v:0); }, 0);
+  const chSorted = Object.entries(chTotals).filter(function(e){ return e[1]>0; })
+                     .sort(function(a,b){ return b[1]-a[1]; }).slice(0,5);
+  var barsHtml = '';
+  chSorted.forEach(function(entry) {
+    var ch = entry[0], v = entry[1];
+    var p = chTotal ? (v/chTotal*100).toFixed(1) : 0;
+    var color = CH_COLORS[ch] || '#B4B2A9';
+    var shortName = ch.replace('Faire: Sell Wholesale','Faire').replace('Upsell.com ex ReConvert','Upsell.com');
+    barsHtml += '<div class="ch-row"><div class="ch-label">' + shortName + '</div>' +
+      '<div class="ch-bar-bg"><div class="ch-bar-fill" style="width:' + p + '%;background:' + color + '"></div></div>' +
+      '<div class="ch-pct">' + p + '%</div></div>';
+  });
+  document.getElementById('ch-bars').innerHTML = barsHtml;
+
+  // Products table
+  var prodHtml = '';
+  Object.entries(TOP10).filter(function(e){ return e[0] !== 'Unknown'; })
+    .sort(function(a,b){ return b[1].net - a[1].net; }).slice(0,8)
+    .forEach(function(entry) {
+      var name = entry[0], v = entry[1];
+      var m = v.net ? (v.gp/v.net*100).toFixed(1) : 0;
+      var pillClass = m >= 60 ? 'pill-green' : m >= 30 ? 'pill-amber' : 'pill-red';
+      prodHtml += '<tr><td class="td-name">' + name + '</td><td>' + fmtK(v.net) + '</td><td>' +
+        v.units.toLocaleString() + '</td><td><span class="pill ' + pillClass + '">' + m + '%</span></td></tr>';
+    });
+  document.getElementById('prod-table').innerHTML = prodHtml;
+
+  // Monthly table
+  var avg = net / Math.max(moLabels.length, 1);
+  var moHtml = '';
+  moLabels.slice().sort(function(a,b){ return b.localeCompare(a); }).slice(0,12).forEach(function(mo) {
+    var v = byMonth[mo].net;
+    var diff = avg ? ((v - avg) / avg * 100).toFixed(0) : 0;
+    var pillClass = diff >= 10 ? 'pill-green' : diff >= -10 ? 'pill-blue' : 'pill-red';
+    var sign = diff >= 0 ? '+' : '';
+    moHtml += '<tr><td>' + moLabel(mo) + '</td><td>' + fmtK(v) + '</td><td><span class="pill ' + pillClass + '">' + sign + diff + '%</span></td></tr>';
+  });
+  document.getElementById('monthly-table').innerHTML = moHtml;
+
+  renderSkuTabs();
+}
+
+const SKU_COLORS = ['#378ADD','#1D9E75','#BA7517','#E24B4A','#7F77DD','#D85A30','#0F6E56','#993C1D'];
+
+function renderSkuTabs() {
+  var skuNames = Object.keys(PRODUCT_MONTHLY);
+  var tabsEl = document.getElementById('sku-tabs');
+  var tabsHtml = '';
+  skuNames.forEach(function(name, i) {
+    var shortName = name.replace(' - Draft','').replace(' - Sale','');
+    var activeClass = i === activeSkuIndex ? ' active' : '';
+    tabsHtml += '<button class="sku-tab' + activeClass + '" onclick="selectSku(' + i + ')">' + shortName + '</button>';
+  });
+  tabsEl.innerHTML = tabsHtml;
+  renderSkuChart(skuNames[activeSkuIndex], SKU_COLORS[activeSkuIndex % SKU_COLORS.length]);
+}
+
+function selectSku(i) {
+  activeSkuIndex = i;
+  document.querySelectorAll('.sku-tab').forEach(function(el, idx) { el.classList.toggle('active', idx === i); });
+  var names = Object.keys(PRODUCT_MONTHLY);
+  renderSkuChart(names[i], SKU_COLORS[i % SKU_COLORS.length]);
+}
+
+function renderSkuChart(name, color) {
+  var data = PRODUCT_MONTHLY[name] || {};
+  var months = Object.keys(data).sort();
+  var vals = months.map(function(m) { return Math.round(data[m].net); });
+  var labels = months.map(moLabel);
+
+  if (skuChart) {
+    skuChart.data.labels = labels;
+    skuChart.data.datasets[0].data = vals;
+    skuChart.data.datasets[0].borderColor = color;
+    skuChart.data.datasets[0].backgroundColor = color + '18';
+    skuChart.data.datasets[0].label = name;
+    skuChart.update();
+  } else {
+    skuChart = new Chart(document.getElementById('skuChart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{ label: name, data: vals, borderColor: color, backgroundColor: color + '18',
+          fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: color, borderWidth: 2 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{display:false}, tooltip:{callbacks:{label: function(ctx){ return ' ' + fmt(ctx.raw); }}} },
+        scales: {
+          x: { grid:{display:false}, ticks:{color:tickColor, font:{size:11}} },
+          y: { grid:{color:gridColor}, ticks:{color:tickColor, font:{size:11}, callback: function(v){ return '$'+(v/1000).toFixed(0)+'k'; }} }
+        }
+      }
+    });
+  }
+}
+
+render(365);
+
 </script>
 </body>
 </html>
